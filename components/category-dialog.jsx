@@ -12,19 +12,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
-interface Category {
-  id: number
-  name: string
-  color: string
-}
-
-interface CategoryDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  category?: Category
-  onSave: (category: Omit<Category, 'id'> | Category) => void
-}
-
 const colorOptions = [
   { name: 'Azul', value: '#3b82f6' },
   { name: 'Verde', value: '#10b981' },
@@ -36,18 +23,13 @@ const colorOptions = [
   { name: 'Ciano', value: '#06b6d4' },
 ]
 
-export function CategoryDialog({
-  open,
-  onOpenChange,
-  category,
-  onSave,
-}: CategoryDialogProps) {
-  const [formData, setFormData] = useState<Omit<Category, 'id'>>({
+export function CategoryDialog({ open, onOpenChange, category, onSave }) {
+  const [formData, setFormData] = useState({
     name: category?.name || '',
     color: category?.color || colorOptions[0].value,
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e) => {
     e.preventDefault()
     if (category) {
       onSave({ ...formData, id: category.id })

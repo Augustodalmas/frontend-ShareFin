@@ -19,30 +19,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
-interface Transaction {
-  id: number
-  name: string
-  type: 'entrada' | 'saida'
-  category: string
-  account: string
-  amount: number
-  date: string
-}
-
-interface TransactionDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  transaction?: Transaction
-  onSave: (transaction: Omit<Transaction, 'id'> | Transaction) => void
-}
-
-export function TransactionDialog({
-  open,
-  onOpenChange,
-  transaction,
-  onSave,
-}: TransactionDialogProps) {
-  const [formData, setFormData] = useState<Omit<Transaction, 'id'>>({
+export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
+  const [formData, setFormData] = useState({
     name: transaction?.name || '',
     type: transaction?.type || 'saida',
     category: transaction?.category || '',
@@ -51,7 +29,7 @@ export function TransactionDialog({
     date: transaction?.date || new Date().toISOString().split('T')[0],
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e) => {
     e.preventDefault()
     if (transaction) {
       onSave({ ...formData, id: transaction.id })
@@ -89,7 +67,7 @@ export function TransactionDialog({
                 <Label htmlFor="type">Tipo</Label>
                 <Select
                   value={formData.type}
-                  onValueChange={(value: 'entrada' | 'saida') =>
+                  onValueChange={(value) =>
                     setFormData({ ...formData, type: value })
                   }
                 >

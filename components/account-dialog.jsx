@@ -19,21 +19,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
-interface BankAccount {
-  id: number
-  name: string
-  bank: string
-  accountNumber?: string
-  balance: number
-}
-
-interface AccountDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  account?: BankAccount
-  onSave: (account: Omit<BankAccount, 'id'> | BankAccount) => void
-}
-
 const banks = [
   'Itaú',
   'Caixa',
@@ -46,20 +31,15 @@ const banks = [
   'Outro',
 ]
 
-export function AccountDialog({
-  open,
-  onOpenChange,
-  account,
-  onSave,
-}: AccountDialogProps) {
-  const [formData, setFormData] = useState<Omit<BankAccount, 'id'>>({
+export function AccountDialog({ open, onOpenChange, account, onSave }) {
+  const [formData, setFormData] = useState({
     name: account?.name || '',
     bank: account?.bank || '',
     accountNumber: account?.accountNumber || '',
     balance: account?.balance || 0,
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e) => {
     e.preventDefault()
     if (account) {
       onSave({ ...formData, id: account.id })
