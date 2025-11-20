@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -25,9 +25,28 @@ const colorOptions = [
 
 export function CategoryDialog({ open, onOpenChange, category, onSave }) {
   const [formData, setFormData] = useState({
-    name: category?.name || '',
-    color: category?.color || colorOptions[0].value,
+    name: '',
+    color: colorOptions[0].value,
+    type: 1,
   })
+
+  useEffect(() => {
+    if (open) {
+      if (category) {
+        setFormData({
+          name: category.name,
+          color: category.color,
+          type: category.type,
+        })
+      } else {
+        setFormData({
+          name: '',
+          color: colorOptions[0].value,
+          type: 1,
+        })
+      }
+    }
+  }, [open, category])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -60,6 +79,33 @@ export function CategoryDialog({ open, onOpenChange, category, onSave }) {
                 placeholder="Ex: Alimentação"
                 required
               />
+            </div>
+            <div className="space-y-2">
+              <Label>Tipo</Label>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  className={`flex-1 rounded-lg border-2 px-4 py-2 text-sm font-medium transition-all ${
+                    formData.type === 1
+                      ? 'border-red-500 bg-red-50 text-red-700'
+                      : 'border-border hover:border-foreground/50'
+                  }`}
+                  onClick={() => setFormData({ ...formData, type: 1 })}
+                >
+                  Despesa
+                </button>
+                <button
+                  type="button"
+                  className={`flex-1 rounded-lg border-2 px-4 py-2 text-sm font-medium transition-all ${
+                    formData.type === 2
+                      ? 'border-green-500 bg-green-50 text-green-700'
+                      : 'border-border hover:border-foreground/50'
+                  }`}
+                  onClick={() => setFormData({ ...formData, type: 2 })}
+                >
+                  Receita
+                </button>
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Cor</Label>

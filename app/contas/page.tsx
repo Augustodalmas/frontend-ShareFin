@@ -1,56 +1,77 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Sidebar } from '@/components/sidebar'
 import { PageHeader } from '@/components/page-header'
 import { DataTable } from '@/components/data-table'
 import { AccountDialog } from '@/components/account-dialog'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
+import { accountsAPI, getUserIdFromToken } from '@/lib/api'
 
 interface BankAccount {
   id: number
   name: string
-  bank: string
-  accountNumber?: string
-  balance: number
+  currency: string
+  color: string
+  active: boolean
 }
 
 export default function AccountsPage() {
-  const [accounts, setAccounts] = useState<BankAccount[]>([
-    {
-      id: 1,
-      name: 'Conta Corrente Principal',
-      bank: 'Itaú',
-      accountNumber: '12345-6',
-      balance: 5240.5,
-    },
-    {
-      id: 2,
-      name: 'Conta Poupança',
-      bank: 'Caixa',
-      accountNumber: '98765-4',
-      balance: 12000,
-    },
-    {
-      id: 3,
-      name: 'Nubank',
-      bank: 'Nubank',
-      balance: 850.75,
-    },
-  ])
+  const [accounts, setAccounts] = useState<BankAccount[]>([])
+
+  useEffect(() => {
+    loadAccounts()
+  }, [])
+
+  const loadAccounts = async () => {
+    try {
+      const data = await accountsAPI.getAll()
+      const mapped = data.map((item: any) => ({
+        id: item.id,
+        name: item.nome,
+        currency: item.moeda,
+        color: item.cor,
+        active: item.ativa,
+      }))
+      setAccounts(mapped)
+    } catch (error) {
+      console.error('Erro ao carregar contas:', error)
+    }
+  }
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingAccount, setEditingAccount] = useState<BankAccount | undefined>()
 
-  const handleSave = (accountData: Omit<BankAccount, 'id'> | BankAccount) => {
-    if ('id' in accountData) {
-      setAccounts(accounts.map((a) => (a.id === accountData.id ? accountData : a)))
-    } else {
-      const newAccount = { ...accountData, id: Date.now() }
-      setAccounts([...accounts, newAccount])
+  const handleSave = async (accountData: Omit<BankAccount, 'id'> | BankAccount) => {
+    try {
+      const userId = getUserIdFromToken()
+      
+      const payload: any = {
+        user: userId,
+        nome: accountData.name,
+        moeda: accountData.currency,
+        cor: accountData.color,
+        ativa: accountData.active,
+      }
+      
+      if ('id' in accountData) {
+        const { user, ...updatePayload } = payload
+        await accountsAPI.update(accountData.id, updatePayload)
+      } else {
+        if (!userId) {
+          throw new Error('User ID not found in token. Please login again.')
+        }
+        
+        await accountsAPI.create(payload)
+      }
+      await loadAccounts()
+      setEditingAccount(undefined)
+      setDialogOpen(false)
+    } catch (error) {
+      console.error('Erro ao salvar conta:', error)
+      alert(`Erro ao salvar conta: ${error.message}`)
     }
-    setEditingAccount(undefined)
   }
 
   const handleEdit = (account: BankAccount) => {
@@ -58,9 +79,14 @@ export default function AccountsPage() {
     setDialogOpen(true)
   }
 
-  const handleDelete = (account: BankAccount) => {
+  const handleDelete = async (account: BankAccount) => {
     if (confirm('Tem certeza que deseja excluir esta conta?')) {
-      setAccounts(accounts.filter((a) => a.id !== account.id))
+      try {
+        await accountsAPI.delete(account.id)
+        await loadAccounts()
+      } catch (error) {
+        console.error('Erro ao excluir conta:', error)
+      }
     }
   }
 
@@ -78,16 +104,26 @@ export default function AccountsPage() {
 
   const columns = [
     { header: 'Nome da Conta', accessor: 'name' as const },
-    { header: 'Banco', accessor: 'bank' as const },
+    { header: 'Moeda', accessor: 'currency' as const },
     {
-      header: 'Número da Conta',
-      accessor: (row: BankAccount) => row.accountNumber || '-',
+      header: 'Cor',
+      accessor: (row: BankAccount) => (
+        <div className="flex items-center gap-2">
+          <div
+            className="w-6 h-6 rounded-full border"
+            style={{ backgroundColor: row.color }}
+          />
+          <span className="text-sm">{row.color}</span>
+        </div>
+      ),
     },
     {
-      header: 'Saldo',
+      header: 'Status',
       accessor: (row: BankAccount) => (
-        <span className="font-semibold text-foreground">
-          {formatCurrency(row.balance)}
+        <span className={`text-sm ${
+          row.active ? 'text-green-600' : 'text-red-600'
+        }`}>
+          {row.active ? 'Ativa' : 'Inativa'}
         </span>
       ),
     },

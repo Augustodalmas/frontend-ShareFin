@@ -1,40 +1,64 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Sidebar } from '@/components/sidebar'
 import { PageHeader } from '@/components/page-header'
 import { DataTable } from '@/components/data-table'
 import { CategoryDialog } from '@/components/category-dialog'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
+import { categoriesAPI } from '@/lib/api'
 
 interface Category {
   id: number
   name: string
   color: string
+  type: 1 | 2
 }
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState<Category[]>([
-    { id: 1, name: 'Alimentação', color: '#10b981' },
-    { id: 2, name: 'Transporte', color: '#3b82f6' },
-    { id: 3, name: 'Moradia', color: '#f59e0b' },
-    { id: 4, name: 'Lazer', color: '#ec4899' },
-    { id: 5, name: 'Saúde', color: '#ef4444' },
-    { id: 6, name: 'Educação', color: '#8b5cf6' },
-  ])
+  const [categories, setCategories] = useState<Category[]>([])
+
+  useEffect(() => {
+    loadCategories()
+  }, [])
+
+  const loadCategories = async () => {
+    try {
+      const data = await categoriesAPI.getAll()
+      const mapped = data.map((item: any) => ({
+        id: item.id,
+        name: item.nome,
+        color: item.cor,
+        type: parseInt(item.tipo),
+      }))
+      setCategories(mapped)
+    } catch (error) {
+      console.error('Erro ao carregar categorias:', error)
+    }
+  }
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | undefined>()
 
-  const handleSave = (categoryData: Omit<Category, 'id'> | Category) => {
-    if ('id' in categoryData) {
-      setCategories(categories.map((c) => (c.id === categoryData.id ? categoryData : c)))
-    } else {
-      const newCategory = { ...categoryData, id: Date.now() }
-      setCategories([...categories, newCategory])
+  const handleSave = async (categoryData: Omit<Category, 'id'> | Category) => {
+    try {
+      const payload = {
+        nome: categoryData.name,
+        cor: categoryData.color,
+        tipo: categoryData.type,
+        valor_inicial: 0,
+      }
+      if ('id' in categoryData) {
+        await categoriesAPI.update(categoryData.id, payload)
+      } else {
+        await categoriesAPI.create(payload)
+      }
+      await loadCategories()
+      setEditingCategory(undefined)
+    } catch (error) {
+      console.error('Erro ao salvar categoria:', error)
     }
-    setEditingCategory(undefined)
   }
 
   const handleEdit = (category: Category) => {
@@ -42,9 +66,14 @@ export default function CategoriesPage() {
     setDialogOpen(true)
   }
 
-  const handleDelete = (category: Category) => {
+  const handleDelete = async (category: Category) => {
     if (confirm('Tem certeza que deseja excluir esta categoria?')) {
-      setCategories(categories.filter((c) => c.id !== category.id))
+      try {
+        await categoriesAPI.delete(category.id)
+        await loadCategories()
+      } catch (error) {
+        console.error('Erro ao excluir categoria:', error)
+      }
     }
   }
 
@@ -55,6 +84,14 @@ export default function CategoriesPage() {
 
   const columns = [
     { header: 'Nome da Categoria', accessor: 'name' as const },
+    {
+      header: 'Tipo',
+      accessor: (row: Category) => (
+        <span className="text-sm text-muted-foreground">
+          {row.type === 1 ? 'Despesa' : 'Receita'}
+        </span>
+      ),
+    },
     {
       header: 'Cor',
       accessor: (row: Category) => (

@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Sidebar } from '@/components/sidebar'
 import { PageHeader } from '@/components/page-header'
 import { DataTable } from '@/components/data-table'
 import { UserDialog } from '@/components/user-dialog'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
+import { usersAPI } from '@/lib/api'
 
 interface User {
   id: number
@@ -16,25 +17,47 @@ interface User {
 }
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<User[]>([
-    { id: 1, name: 'João Silva', email: 'joao@example.com', type: 'admin' },
-    { id: 2, name: 'Maria Santos', email: 'maria@example.com', type: 'usuario' },
-    { id: 3, name: 'Pedro Costa', email: 'pedro@example.com', type: 'usuario' },
-  ])
+  const [users, setUsers] = useState<User[]>([])
+
+  useEffect(() => {
+    loadUsers()
+  }, [])
+
+  const loadUsers = async () => {
+    try {
+      const data = await usersAPI.getAll()
+      const mapped = data.map((item: any) => ({
+        id: item.id,
+        name: item.nome,
+        email: item.email,
+        type: item.ativo ? 'admin' : 'usuario',
+      }))
+      setUsers(mapped)
+    } catch (error) {
+      console.error('Erro ao carregar usuários:', error)
+    }
+  }
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<User | undefined>()
 
-  const handleSave = (userData: Omit<User, 'id'> | User) => {
-    if ('id' in userData) {
-      // Edit existing user
-      setUsers(users.map((u) => (u.id === userData.id ? userData : u)))
-    } else {
-      // Add new user
-      const newUser = { ...userData, id: Date.now() }
-      setUsers([...users, newUser])
+  const handleSave = async (userData: Omit<User, 'id'> | User) => {
+    try {
+      const payload = {
+        nome: userData.name,
+        email: userData.email,
+        ativo: userData.type === 'admin' ? 1 : 0,
+      }
+      if ('id' in userData) {
+        await usersAPI.update(userData.id, payload)
+      } else {
+        await usersAPI.create(payload)
+      }
+      await loadUsers()
+      setEditingUser(undefined)
+    } catch (error) {
+      console.error('Erro ao salvar usuário:', error)
     }
-    setEditingUser(undefined)
   }
 
   const handleEdit = (user: User) => {
@@ -42,9 +65,14 @@ export default function UsersPage() {
     setDialogOpen(true)
   }
 
-  const handleDelete = (user: User) => {
+  const handleDelete = async (user: User) => {
     if (confirm('Tem certeza que deseja excluir este usuário?')) {
-      setUsers(users.filter((u) => u.id !== user.id))
+      try {
+        await usersAPI.delete(user.id)
+        await loadUsers()
+      } catch (error) {
+        console.error('Erro ao excluir usuário:', error)
+      }
     }
   }
 

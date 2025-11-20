@@ -1,10 +1,93 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import { Sidebar } from '@/components/sidebar'
 import { PageHeader } from '@/components/page-header'
 import { StatCard } from '@/components/stat-card'
 import { Card } from '@/components/ui/card'
 import { TrendingUp, TrendingDown, Wallet, Receipt, Building2, Tag } from 'lucide-react'
+import { transactionsAPI, accountsAPI, categoriesAPI } from '@/lib/api'
 
 export default function DashboardPage() {
+  const [stats, setStats] = useState({
+    totalEntradas: 0,
+    totalSaidas: 0,
+    saldoAtual: 0,
+    totalTransacoes: 0,
+    totalContas: 0,
+    totalCategorias: 0
+  })
+  const [recentTransactions, setRecentTransactions] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    loadDashboardData()
+  }, [])
+
+  const loadDashboardData = async () => {
+    try {
+      const [transactions, accounts, categories] = await Promise.all([
+        transactionsAPI.getAll(),
+        accountsAPI.getAll(),
+        categoriesAPI.getAll()
+      ])
+
+      const totalEntradas = transactions
+        .filter(t => t.valor > 0)
+        .reduce((sum, t) => sum + t.valor, 0)
+      
+      const totalSaidas = Math.abs(transactions
+        .filter(t => t.valor < 0)
+        .reduce((sum, t) => sum + t.valor, 0))
+
+      const recent = transactions
+        .sort((a, b) => new Date(b.data_transacao) - new Date(a.data_transacao))
+        .slice(0, 4)
+        .map(t => ({
+          name: t.obs || 'Sem descrição',
+          category: t.categoria_nome || 'Sem categoria',
+          date: new Date(t.data_transacao).toLocaleDateString('pt-BR'),
+          amount: Math.abs(t.valor),
+          type: t.valor > 0 ? 'entrada' : 'saida'
+        }))
+
+      setStats({
+        totalEntradas,
+        totalSaidas,
+        saldoAtual: totalEntradas - totalSaidas,
+        totalTransacoes: transactions.length,
+        totalContas: accounts.length,
+        totalCategorias: categories.length
+      })
+      
+      setRecentTransactions(recent)
+    } catch (error) {
+      console.error('Erro ao carregar dashboard:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(value)
+  }
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen">
+        <Sidebar />
+        <main className="ml-64 flex-1 p-8">
+          <div className="flex items-center justify-center h-64">
+            <p>Carregando...</p>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
   return (
     <div className="flex min-h-screen">
       <Sidebar />
@@ -18,21 +101,21 @@ export default function DashboardPage() {
         <div className="mb-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <StatCard
             title="Total de Entradas"
-            value="R$ 15.240,00"
+            value={formatCurrency(stats.totalEntradas)}
             icon={TrendingUp}
-            description="+12% em relação ao mês anterior"
+            description="Receitas do período"
           />
           <StatCard
             title="Total de Saídas"
-            value="R$ 8.650,00"
+            value={formatCurrency(stats.totalSaidas)}
             icon={TrendingDown}
-            description="-5% em relação ao mês anterior"
+            description="Despesas do período"
           />
           <StatCard
             title="Saldo Atual"
-            value="R$ 6.590,00"
+            value={formatCurrency(stats.saldoAtual)}
             icon={Wallet}
-            description="Saldo disponível em todas as contas"
+            description="Diferença entre entradas e saídas"
           />
         </div>
 
@@ -47,7 +130,7 @@ export default function DashboardPage() {
                 <p className="text-sm font-medium text-muted-foreground">
                   Total de Transações
                 </p>
-                <p className="text-2xl font-bold text-foreground">247</p>
+                <p className="text-2xl font-bold text-foreground">{stats.totalTransacoes}</p>
               </div>
             </div>
           </Card>
@@ -61,7 +144,7 @@ export default function DashboardPage() {
                 <p className="text-sm font-medium text-muted-foreground">
                   Contas Cadastradas
                 </p>
-                <p className="text-2xl font-bold text-foreground">5</p>
+                <p className="text-2xl font-bold text-foreground">{stats.totalContas}</p>
               </div>
             </div>
           </Card>
@@ -75,7 +158,7 @@ export default function DashboardPage() {
                 <p className="text-sm font-medium text-muted-foreground">
                   Categorias Ativas
                 </p>
-                <p className="text-2xl font-bold text-foreground">12</p>
+                <p className="text-2xl font-bold text-foreground">{stats.totalCategorias}</p>
               </div>
             </div>
           </Card>
@@ -87,57 +170,35 @@ export default function DashboardPage() {
             Transações Recentes
           </h2>
           <div className="space-y-4">
-            {[
-              {
-                name: 'Supermercado',
-                category: 'Alimentação',
-                date: '15/11/2025',
-                amount: '-R$ 240,00',
-                type: 'saída',
-              },
-              {
-                name: 'Salário',
-                category: 'Renda',
-                date: '14/11/2025',
-                amount: '+R$ 5.000,00',
-                type: 'entrada',
-              },
-              {
-                name: 'Conta de Luz',
-                category: 'Utilidades',
-                date: '13/11/2025',
-                amount: '-R$ 180,00',
-                type: 'saída',
-              },
-              {
-                name: 'Freelance',
-                category: 'Renda Extra',
-                date: '12/11/2025',
-                amount: '+R$ 800,00',
-                type: 'entrada',
-              },
-            ].map((transaction, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between border-b border-border pb-4 last:border-0 last:pb-0"
-              >
-                <div className="space-y-1">
-                  <p className="font-medium text-foreground">{transaction.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {transaction.category} • {transaction.date}
+            {recentTransactions.length > 0 ? (
+              recentTransactions.map((transaction, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between border-b border-border pb-4 last:border-0 last:pb-0"
+                >
+                  <div className="space-y-1">
+                    <p className="font-medium text-foreground">{transaction.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {transaction.category} • {transaction.date}
+                    </p>
+                  </div>
+                  <p
+                    className={`text-lg font-semibold ${
+                      transaction.type === 'entrada'
+                        ? 'text-green-600'
+                        : 'text-red-600'
+                    }`}
+                  >
+                    {transaction.type === 'entrada' ? '+' : '-'}
+                    {formatCurrency(transaction.amount)}
                   </p>
                 </div>
-                <p
-                  className={`text-lg font-semibold ${
-                    transaction.type === 'entrada'
-                      ? 'text-green-600'
-                      : 'text-red-600'
-                  }`}
-                >
-                  {transaction.amount}
-                </p>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-muted-foreground text-center py-8">
+                Nenhuma transação encontrada
+              </p>
+            )}
           </div>
         </Card>
       </main>

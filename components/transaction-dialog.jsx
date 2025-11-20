@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { categoriesAPI, accountsAPI } from '@/lib/api'
 import {
   Dialog,
   DialogContent,
@@ -21,13 +22,67 @@ import {
 
 export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
   const [formData, setFormData] = useState({
-    name: transaction?.name || '',
-    type: transaction?.type || 'saida',
-    category: transaction?.category || '',
-    account: transaction?.account || '',
-    amount: transaction?.amount || 0,
-    date: transaction?.date || new Date().toISOString().split('T')[0],
+    name: '',
+    type: 'saida',
+    category: '',
+    account: '',
+    amount: 0,
+    date: new Date().toISOString().split('T')[0],
   })
+  
+  const [categories, setCategories] = useState([])
+  const [accounts, setAccounts] = useState([])
+
+  useEffect(() => {
+    if (open) {
+      loadCategories()
+      loadAccounts()
+    }
+  }, [open])
+
+  useEffect(() => {
+    if (transaction) {
+      setFormData({
+        name: transaction.name,
+        type: transaction.type,
+        category: transaction.categoryId?.toString() || '',
+        account: transaction.accountId?.toString() || '',
+        amount: transaction.amount,
+        date: transaction.date,
+      })
+    } else {
+      setFormData({
+        name: '',
+        type: 'saida',
+        category: '',
+        account: '',
+        amount: 0,
+        date: new Date().toISOString().split('T')[0],
+      })
+    }
+  }, [transaction, open])
+
+  const loadCategories = async () => {
+    try {
+      const data = await categoriesAPI.getAll()
+      const mapped = data.map((item) => ({
+        ...item,
+        tipo: parseInt(item.tipo)
+      }))
+      setCategories(mapped)
+    } catch (error) {
+      console.error('Erro ao carregar categorias:', error)
+    }
+  }
+
+  const loadAccounts = async () => {
+    try {
+      const data = await accountsAPI.getAll()
+      setAccounts(data)
+    } catch (error) {
+      console.error('Erro ao carregar contas:', error)
+    }
+  }
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -65,20 +120,12 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="type">Tipo</Label>
-                <Select
-                  value={formData.type}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, type: value })
-                  }
-                >
-                  <SelectTrigger id="type">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="entrada">Entrada</SelectItem>
-                    <SelectItem value="saida">Saída</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input
+                  id="type"
+                  value={formData.type === 'entrada' ? 'Receita' : 'Despesa'}
+                  disabled
+                  className="bg-muted"
+                />
               </div>
 
               <div className="space-y-2">
@@ -104,22 +151,21 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
               <Label htmlFor="category">Categoria</Label>
               <Select
                 value={formData.category}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, category: value })
-                }
+                onValueChange={(value) => {
+                  const selectedCategory = categories.find(c => c.id.toString() === value)
+                  const newType = selectedCategory?.tipo === 1 ? 'saida' : 'entrada'
+                  setFormData({ ...formData, category: value, type: newType })
+                }}
               >
                 <SelectTrigger id="category">
                   <SelectValue placeholder="Selecione a categoria" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Alimentação">Alimentação</SelectItem>
-                  <SelectItem value="Transporte">Transporte</SelectItem>
-                  <SelectItem value="Moradia">Moradia</SelectItem>
-                  <SelectItem value="Lazer">Lazer</SelectItem>
-                  <SelectItem value="Saúde">Saúde</SelectItem>
-                  <SelectItem value="Educação">Educação</SelectItem>
-                  <SelectItem value="Renda">Renda</SelectItem>
-                  <SelectItem value="Renda Extra">Renda Extra</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.id.toString()}>
+                      {category.nome} ({category.tipo === 1 ? 'Despesa' : 'Receita'})
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -136,14 +182,11 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
                   <SelectValue placeholder="Selecione a conta" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Itaú - Conta Corrente">
-                    Itaú - Conta Corrente
-                  </SelectItem>
-                  <SelectItem value="Caixa - Poupança">
-                    Caixa - Poupança
-                  </SelectItem>
-                  <SelectItem value="Nubank">Nubank</SelectItem>
-                  <SelectItem value="Bradesco">Bradesco</SelectItem>
+                  {accounts.map((account) => (
+                    <SelectItem key={account.id} value={account.id.toString()}>
+                      {account.nome}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

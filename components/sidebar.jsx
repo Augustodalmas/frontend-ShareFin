@@ -1,9 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Users, Building2, Tag, Receipt } from 'lucide-react'
+import { usePathname, useRouter } from 'next/navigation'
+import { LayoutDashboard, Users, Building2, Tag, Receipt, LogOut } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { authAPI } from '@/lib/api'
 
 const menuItems = [
   {
@@ -35,13 +36,20 @@ const menuItems = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const router = useRouter()
+  const isLoggedIn = typeof window !== 'undefined' && localStorage.getItem('token')
+
+  const handleLogout = () => {
+    authAPI.logout()
+    router.push('/login')
+  }
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-64 border-r border-border bg-card">
+    <aside className="fixed left-0 top-0 h-full w-64 border-r border-border bg-card flex flex-col">
       <div className="flex h-16 items-center border-b border-border px-6">
         <h1 className="text-xl font-semibold text-foreground">Gestão Financeira</h1>
       </div>
-      <nav className="space-y-1 p-4">
+      <nav className="flex-1 space-y-1 p-4">
         {menuItems.map((item) => {
           const Icon = item.icon
           const isActive = pathname === item.href
@@ -62,6 +70,25 @@ export function Sidebar() {
           )
         })}
       </nav>
+      <div className="border-t border-border p-4">
+        {isLoggedIn ? (
+          <button
+            onClick={handleLogout}
+            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+          >
+            <LogOut className="h-5 w-5" />
+            Sair
+          </button>
+        ) : (
+          <Link
+            href="/login"
+            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+          >
+            <LogOut className="h-5 w-5" />
+            Login
+          </Link>
+        )}
+      </div>
     </aside>
   )
 }

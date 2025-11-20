@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -19,25 +19,43 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
-const banks = [
-  'Itaú',
-  'Caixa',
-  'Bradesco',
-  'Nubank',
-  'Banco do Brasil',
-  'Santander',
-  'Inter',
-  'C6 Bank',
-  'Outro',
+const currencies = [
+  { value: 'BRL', label: 'Real (BRL)' },
+  { value: 'USD', label: 'Dólar (USD)' },
+  { value: 'EUR', label: 'Euro (EUR)' },
+  { value: 'GBP', label: 'Libra (GBP)' },
+]
+
+const colors = [
+  '#3b82f6', '#ef4444', '#10b981', '#f59e0b',
+  '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'
 ]
 
 export function AccountDialog({ open, onOpenChange, account, onSave }) {
   const [formData, setFormData] = useState({
-    name: account?.name || '',
-    bank: account?.bank || '',
-    accountNumber: account?.accountNumber || '',
-    balance: account?.balance || 0,
+    name: '',
+    currency: 'BRL',
+    color: colors[0],
+    active: true,
   })
+
+  useEffect(() => {
+    if (account) {
+      setFormData({
+        name: account.name,
+        currency: account.currency,
+        color: account.color,
+        active: account.active,
+      })
+    } else {
+      setFormData({
+        name: '',
+        currency: 'BRL',
+        color: colors[0],
+        active: true,
+      })
+    }
+  }, [account, open])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -72,52 +90,52 @@ export function AccountDialog({ open, onOpenChange, account, onSave }) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="bank">Banco</Label>
+              <Label htmlFor="currency">Moeda</Label>
               <Select
-                value={formData.bank}
+                value={formData.currency}
                 onValueChange={(value) =>
-                  setFormData({ ...formData, bank: value })
+                  setFormData({ ...formData, currency: value })
                 }
               >
-                <SelectTrigger id="bank">
-                  <SelectValue placeholder="Selecione o banco" />
+                <SelectTrigger id="currency">
+                  <SelectValue placeholder="Selecione a moeda" />
                 </SelectTrigger>
                 <SelectContent>
-                  {banks.map((bank) => (
-                    <SelectItem key={bank} value={bank}>
-                      {bank}
+                  {currencies.map((currency) => (
+                    <SelectItem key={currency.value} value={currency.value}>
+                      {currency.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="accountNumber">
-                Número da Conta{' '}
-                <span className="text-muted-foreground">(opcional)</span>
-              </Label>
-              <Input
-                id="accountNumber"
-                value={formData.accountNumber}
-                onChange={(e) =>
-                  setFormData({ ...formData, accountNumber: e.target.value })
-                }
-                placeholder="Ex: 12345-6"
-              />
+              <Label htmlFor="color">Cor</Label>
+              <div className="flex gap-2">
+                {colors.map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    className={`w-8 h-8 rounded-full border-2 ${
+                      formData.color === color ? 'border-foreground' : 'border-border'
+                    }`}
+                    style={{ backgroundColor: color }}
+                    onClick={() => setFormData({ ...formData, color })}
+                  />
+                ))}
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="balance">Saldo Inicial</Label>
-              <Input
-                id="balance"
-                type="number"
-                step="0.01"
-                value={formData.balance}
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="active"
+                checked={formData.active}
                 onChange={(e) =>
-                  setFormData({ ...formData, balance: parseFloat(e.target.value) || 0 })
+                  setFormData({ ...formData, active: e.target.checked })
                 }
-                placeholder="0.00"
-                required
+                className="rounded"
               />
+              <Label htmlFor="active">Conta ativa</Label>
             </div>
           </div>
           <DialogFooter>
