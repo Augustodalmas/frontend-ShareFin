@@ -1,14 +1,6 @@
 import { Card } from '@/components/ui/card'
-import { type LucideIcon } from 'lucide-react'
 
-interface StatCardProps {
-  title: string
-  value: string
-  icon: LucideIcon
-  description?: string
-}
-
-export function StatCard({ title, value, icon: Icon, description }: StatCardProps) {
+export function StatCard({ title, value, icon: Icon, description }) {
   return (
     <Card className="p-6">
       <div className="flex items-start justify-between">

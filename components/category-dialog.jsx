@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -11,19 +11,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-
-interface Category {
-  id: number
-  name: string
-  color: string
-}
-
-interface CategoryDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  category?: Category
-  onSave: (category: Omit<Category, 'id'> | Category) => void
-}
 
 const colorOptions = [
   { name: 'Azul', value: '#3b82f6' },
@@ -36,18 +23,32 @@ const colorOptions = [
   { name: 'Ciano', value: '#06b6d4' },
 ]
 
-export function CategoryDialog({
-  open,
-  onOpenChange,
-  category,
-  onSave,
-}: CategoryDialogProps) {
-  const [formData, setFormData] = useState<Omit<Category, 'id'>>({
-    name: category?.name || '',
-    color: category?.color || colorOptions[0].value,
+export function CategoryDialog({ open, onOpenChange, category, onSave }) {
+  const [formData, setFormData] = useState({
+    name: '',
+    color: colorOptions[0].value,
+    type: 1,
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (open) {
+      if (category) {
+        setFormData({
+          name: category.name,
+          color: category.color,
+          type: category.type,
+        })
+      } else {
+        setFormData({
+          name: '',
+          color: colorOptions[0].value,
+          type: 1,
+        })
+      }
+    }
+  }, [open, category])
+
+  const handleSubmit = (e) => {
     e.preventDefault()
     if (category) {
       onSave({ ...formData, id: category.id })
@@ -78,6 +79,33 @@ export function CategoryDialog({
                 placeholder="Ex: Alimentação"
                 required
               />
+            </div>
+            <div className="space-y-2">
+              <Label>Tipo</Label>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  className={`flex-1 rounded-lg border-2 px-4 py-2 text-sm font-medium transition-all ${
+                    formData.type === 1
+                      ? 'border-red-500 bg-red-50 text-red-700'
+                      : 'border-border hover:border-foreground/50'
+                  }`}
+                  onClick={() => setFormData({ ...formData, type: 1 })}
+                >
+                  Despesa
+                </button>
+                <button
+                  type="button"
+                  className={`flex-1 rounded-lg border-2 px-4 py-2 text-sm font-medium transition-all ${
+                    formData.type === 2
+                      ? 'border-green-500 bg-green-50 text-green-700'
+                      : 'border-border hover:border-foreground/50'
+                  }`}
+                  onClick={() => setFormData({ ...formData, type: 2 })}
+                >
+                  Receita
+                </button>
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Cor</Label>

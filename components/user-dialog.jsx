@@ -19,28 +19,14 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
-interface User {
-  id: number
-  name: string
-  email: string
-  type: 'admin' | 'usuario'
-}
-
-interface UserDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  user?: User
-  onSave: (user: Omit<User, 'id'> | User) => void
-}
-
-export function UserDialog({ open, onOpenChange, user, onSave }: UserDialogProps) {
-  const [formData, setFormData] = useState<Omit<User, 'id'>>({
+export function UserDialog({ open, onOpenChange, user, onSave }) {
+  const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
     type: user?.type || 'usuario',
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e) => {
     e.preventDefault()
     if (user) {
       onSave({ ...formData, id: user.id })
@@ -87,7 +73,7 @@ export function UserDialog({ open, onOpenChange, user, onSave }: UserDialogProps
               <Label htmlFor="type">Tipo</Label>
               <Select
                 value={formData.type}
-                onValueChange={(value: 'admin' | 'usuario') =>
+                onValueChange={(value) =>
                   setFormData({ ...formData, type: value })
                 }
               >

@@ -9,25 +9,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Pencil, Trash2 } from 'lucide-react'
 
-interface Column<T> {
-  header: string
-  accessor: keyof T | ((row: T) => React.ReactNode)
-  className?: string
-}
-
-interface DataTableProps<T> {
-  data: T[]
-  columns: Column<T>[]
-  onEdit?: (row: T) => void
-  onDelete?: (row: T) => void
-}
-
-export function DataTable<T extends { id: string | number }>({
-  data,
-  columns,
-  onEdit,
-  onDelete,
-}: DataTableProps<T>) {
+export function DataTable({ data, columns, onEdit, onDelete }) {
   return (
     <div className="rounded-lg border border-border bg-card">
       <Table>

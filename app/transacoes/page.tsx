@@ -1,91 +1,91 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Sidebar } from '@/components/sidebar'
 import { PageHeader } from '@/components/page-header'
 import { DataTable } from '@/components/data-table'
 import { TransactionDialog } from '@/components/transaction-dialog'
 import { Button } from '@/components/ui/button'
 import { Plus, TrendingUp, TrendingDown } from 'lucide-react'
+import { transactionsAPI, getUserIdFromToken } from '@/lib/api'
 
 interface Transaction {
   id: number
   name: string
   type: 'entrada' | 'saida'
   category: string
+  categoryId: number
   account: string
+  accountId: number
   amount: number
   date: string
 }
 
 export default function TransactionsPage() {
-  const [transactions, setTransactions] = useState<Transaction[]>([
-    {
-      id: 1,
-      name: 'Supermercado',
-      type: 'saida',
-      category: 'Alimentação',
-      account: 'Nubank',
-      amount: 240.0,
-      date: '2025-11-15',
-    },
-    {
-      id: 2,
-      name: 'Salário',
-      type: 'entrada',
-      category: 'Renda',
-      account: 'Itaú - Conta Corrente',
-      amount: 5000.0,
-      date: '2025-11-14',
-    },
-    {
-      id: 3,
-      name: 'Conta de Luz',
-      type: 'saida',
-      category: 'Moradia',
-      account: 'Itaú - Conta Corrente',
-      amount: 180.0,
-      date: '2025-11-13',
-    },
-    {
-      id: 4,
-      name: 'Freelance',
-      type: 'entrada',
-      category: 'Renda Extra',
-      account: 'Nubank',
-      amount: 800.0,
-      date: '2025-11-12',
-    },
-    {
-      id: 5,
-      name: 'Uber',
-      type: 'saida',
-      category: 'Transporte',
-      account: 'Nubank',
-      amount: 45.5,
-      date: '2025-11-11',
-    },
-  ])
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    loadTransactions()
+  }, [])
+
+  const loadTransactions = async () => {
+    try {
+      const data = await transactionsAPI.getAll()
+      const mapped = data.map((item: any) => ({
+        id: item.id,
+        name: item.obs || 'Sem descrição',
+        type: item.valor > 0 ? 'entrada' : 'saida',
+        category: item.categoria_nome || 'Sem categoria',
+        categoryId: item.categoria_id,
+        account: item.conta_nome || 'Sem conta',
+        accountId: item.conta_id,
+        amount: Math.abs(item.valor),
+        date: item.data_transacao.split('T')[0],
+      }))
+      setTransactions(mapped)
+    } catch (error) {
+      console.error('Erro ao carregar transações:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingTransaction, setEditingTransaction] = useState<
     Transaction | undefined
   >()
 
-  const handleSave = (
+  const handleSave = async (
     transactionData: Omit<Transaction, 'id'> | Transaction
   ) => {
-    if ('id' in transactionData) {
-      setTransactions(
-        transactions.map((t) =>
-          t.id === transactionData.id ? transactionData : t
-        )
-      )
-    } else {
-      const newTransaction = { ...transactionData, id: Date.now() }
-      setTransactions([newTransaction, ...transactions])
+    try {
+      const userId = getUserIdFromToken()
+      const payload = {
+        user: userId,
+        conta: parseInt(transactionData.account),
+        categoria: parseInt(transactionData.category),
+        valor: transactionData.type === 'entrada' ? transactionData.amount : -transactionData.amount,
+        obs: transactionData.name,
+      }
+      
+      if (!userId) {
+        throw new Error('User ID not found in token. Please login again.')
+      }
+      
+      if ('id' in transactionData) {
+        const { user, ...updatePayload } = payload
+        await transactionsAPI.update(transactionData.id, updatePayload)
+      } else {
+        await transactionsAPI.create(payload)
+      }
+      await loadTransactions()
+      setEditingTransaction(undefined)
+      setDialogOpen(false)
+    } catch (error) {
+      console.error('Erro ao salvar transação:', error)
+      alert(`Erro ao salvar transação: ${error.message}`)
     }
-    setEditingTransaction(undefined)
   }
 
   const handleEdit = (transaction: Transaction) => {
@@ -93,9 +93,14 @@ export default function TransactionsPage() {
     setDialogOpen(true)
   }
 
-  const handleDelete = (transaction: Transaction) => {
+  const handleDelete = async (transaction: Transaction) => {
     if (confirm('Tem certeza que deseja excluir esta transação?')) {
-      setTransactions(transactions.filter((t) => t.id !== transaction.id))
+      try {
+        await transactionsAPI.delete(transaction.id)
+        await loadTransactions()
+      } catch (error) {
+        console.error('Erro ao excluir transação:', error)
+      }
     }
   }
 
