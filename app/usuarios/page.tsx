@@ -82,13 +82,13 @@ export default function UsersPage() {
   }
 
   const columns = [
-    { header: 'Nome', accessor: 'name' as const },
-    { header: 'Email', accessor: 'email' as const },
+    { header: 'Nome', accessor: 'name' as const, className: 'text-sm sm:text-base' },
+    { header: 'Email', accessor: 'email' as const, className: 'text-xs sm:text-sm hidden sm:table-cell' },
     {
       header: 'Tipo',
       accessor: (row: User) => (
-        <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-          {row.type === 'admin' ? 'Administrador' : 'Usuário'}
+        <span className="rounded-full bg-primary/10 px-2 sm:px-3 py-1 text-xs font-medium text-primary">
+          {row.type === 'admin' ? 'Admin' : 'Usuário'}
         </span>
       ),
     },
@@ -97,7 +97,7 @@ export default function UsersPage() {
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <main className="ml-64 flex-1 p-8">
+      <main className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-8 pt-20 lg:pt-8">
         <PageHeader
           title="Usuários"
           description="Gerencie os usuários do sistema"

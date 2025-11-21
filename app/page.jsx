@@ -79,7 +79,7 @@ export default function DashboardPage() {
     return (
       <div className="flex min-h-screen">
         <Sidebar />
-        <main className="ml-64 flex-1 p-8">
+        <main className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-8 pt-20 lg:pt-8">
           <div className="flex items-center justify-center h-64">
             <p>Carregando...</p>
           </div>
@@ -91,14 +91,14 @@ export default function DashboardPage() {
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <main className="ml-64 flex-1 p-8">
+      <main className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-8 pt-20 lg:pt-8">
         <PageHeader
           title="Dashboard"
           description="Visão geral das suas finanças"
         />
 
         {/* Summary Cards */}
-        <div className="mb-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mb-6 lg:mb-8 grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           <StatCard
             title="Total de Entradas"
             value={formatCurrency(stats.totalEntradas)}
@@ -120,53 +120,53 @@ export default function DashboardPage() {
         </div>
 
         {/* Quick Stats Grid */}
-        <div className="grid gap-6 md:grid-cols-3">
-          <Card className="p-6">
-            <div className="flex items-center gap-4">
+        <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          <Card className="p-4 sm:p-6">
+            <div className="flex items-center gap-3 sm:gap-4">
               <div className="rounded-lg bg-primary/10 p-3">
                 <Receipt className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground">
                   Total de Transações
                 </p>
-                <p className="text-2xl font-bold text-foreground">{stats.totalTransacoes}</p>
+                <p className="text-xl sm:text-2xl font-bold text-foreground">{stats.totalTransacoes}</p>
               </div>
             </div>
           </Card>
 
-          <Card className="p-6">
-            <div className="flex items-center gap-4">
+          <Card className="p-4 sm:p-6">
+            <div className="flex items-center gap-3 sm:gap-4">
               <div className="rounded-lg bg-primary/10 p-3">
                 <Building2 className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground">
                   Contas Cadastradas
                 </p>
-                <p className="text-2xl font-bold text-foreground">{stats.totalContas}</p>
+                <p className="text-xl sm:text-2xl font-bold text-foreground">{stats.totalContas}</p>
               </div>
             </div>
           </Card>
 
-          <Card className="p-6">
-            <div className="flex items-center gap-4">
+          <Card className="p-4 sm:p-6">
+            <div className="flex items-center gap-3 sm:gap-4">
               <div className="rounded-lg bg-primary/10 p-3">
                 <Tag className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground">
                   Categorias Ativas
                 </p>
-                <p className="text-2xl font-bold text-foreground">{stats.totalCategorias}</p>
+                <p className="text-xl sm:text-2xl font-bold text-foreground">{stats.totalCategorias}</p>
               </div>
             </div>
           </Card>
         </div>
 
         {/* Recent Transactions */}
-        <Card className="mt-8 p-6">
-          <h2 className="mb-4 text-xl font-semibold text-foreground">
+        <Card className="mt-6 lg:mt-8 p-4 sm:p-6">
+          <h2 className="mb-4 text-lg sm:text-xl font-semibold text-foreground">
             Transações Recentes
           </h2>
           <div className="space-y-4">
@@ -174,16 +174,16 @@ export default function DashboardPage() {
               recentTransactions.map((transaction, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between border-b border-border pb-4 last:border-0 last:pb-0"
+                  className="flex items-center justify-between gap-4 border-b border-border pb-4 last:border-0 last:pb-0"
                 >
-                  <div className="space-y-1">
-                    <p className="font-medium text-foreground">{transaction.name}</p>
-                    <p className="text-sm text-muted-foreground">
+                  <div className="space-y-1 min-w-0 flex-1">
+                    <p className="font-medium text-foreground text-sm sm:text-base truncate">{transaction.name}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">
                       {transaction.category} • {transaction.date}
                     </p>
                   </div>
                   <p
-                    className={`text-lg font-semibold ${
+                    className={`text-base sm:text-lg font-semibold whitespace-nowrap ${
                       transaction.type === 'entrada'
                         ? 'text-green-600'
                         : 'text-red-600'

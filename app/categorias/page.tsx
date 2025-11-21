@@ -83,11 +83,11 @@ export default function CategoriesPage() {
   }
 
   const columns = [
-    { header: 'Nome da Categoria', accessor: 'name' as const },
+    { header: 'Nome da Categoria', accessor: 'name' as const, className: 'text-sm sm:text-base' },
     {
       header: 'Tipo',
       accessor: (row: Category) => (
-        <span className="text-sm text-muted-foreground">
+        <span className="text-xs sm:text-sm text-muted-foreground">
           {row.type === 1 ? 'Despesa' : 'Receita'}
         </span>
       ),
@@ -95,12 +95,12 @@ export default function CategoriesPage() {
     {
       header: 'Cor',
       accessor: (row: Category) => (
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <div
-            className="h-8 w-8 rounded-lg border border-border"
+            className="h-6 w-6 sm:h-8 sm:w-8 rounded-lg border border-border flex-shrink-0"
             style={{ backgroundColor: row.color }}
           />
-          <span className="text-sm font-medium text-muted-foreground">
+          <span className="text-xs sm:text-sm font-medium text-muted-foreground hidden md:inline">
             {row.color}
           </span>
         </div>
@@ -111,7 +111,7 @@ export default function CategoriesPage() {
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <main className="ml-64 flex-1 p-8">
+      <main className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-8 pt-20 lg:pt-8">
         <PageHeader
           title="Categorias"
           description="Organize suas transações por categorias"

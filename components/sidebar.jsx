@@ -2,9 +2,10 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { LayoutDashboard, Users, Building2, Tag, Receipt, LogOut } from 'lucide-react'
+import { LayoutDashboard, Users, Building2, Tag, Receipt, LogOut, Menu, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { authAPI } from '@/lib/api'
+import { useState, useEffect } from 'react'
 
 const menuItems = [
   {
@@ -37,7 +38,16 @@ const menuItems = [
 export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
-  const isLoggedIn = typeof window !== 'undefined' && localStorage.getItem('token')
+  const [isOpen, setIsOpen] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+
+  useEffect(() => {
+    setIsLoggedIn(!!localStorage.getItem('token'))
+  }, [])
+
+  useEffect(() => {
+    setIsOpen(false)
+  }, [pathname])
 
   const handleLogout = () => {
     authAPI.logout()
@@ -45,50 +55,75 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-64 border-r border-border bg-card flex flex-col">
-      <div className="flex h-16 items-center border-b border-border px-6">
-        <h1 className="text-xl font-semibold text-foreground">Gestão Financeira</h1>
-      </div>
-      <nav className="flex-1 space-y-1 p-4">
-        {menuItems.map((item) => {
-          const Icon = item.icon
-          const isActive = pathname === item.href
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                'flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors',
-                isActive
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-              )}
-            >
-              <Icon className="h-5 w-5" />
-              {item.title}
-            </Link>
-          )
-        })}
-      </nav>
-      <div className="border-t border-border p-4">
-        {isLoggedIn ? (
-          <button
-            onClick={handleLogout}
-            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-          >
-            <LogOut className="h-5 w-5" />
-            Sair
-          </button>
-        ) : (
-          <Link
-            href="/login"
-            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-          >
-            <LogOut className="h-5 w-5" />
-            Login
-          </Link>
+    <>
+      {/* Mobile Menu Button */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="fixed top-4 left-4 z-50 lg:hidden rounded-lg bg-card p-2 border border-border shadow-lg"
+      >
+        {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+      </button>
+
+      {/* Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={cn(
+          'fixed left-0 top-0 h-full w-64 border-r border-border bg-card flex flex-col z-40 transition-transform duration-300',
+          'lg:translate-x-0',
+          isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
-      </div>
-    </aside>
+      >
+        <div className="flex h-16 items-center border-b border-border px-6">
+          <h1 className="text-lg lg:text-xl font-semibold text-foreground">Gestão Financeira</h1>
+        </div>
+        <nav className="flex-1 space-y-1 p-4 overflow-y-auto">
+          {menuItems.map((item) => {
+            const Icon = item.icon
+            const isActive = pathname === item.href
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  'flex items-center gap-3 rounded-lg px-4 py-3 text-sm lg:text-base font-medium transition-colors',
+                  isActive
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                )}
+              >
+                <Icon className="h-5 w-5" />
+                {item.title}
+              </Link>
+            )
+          })}
+        </nav>
+        <div className="border-t border-border p-4">
+          {isLoggedIn ? (
+            <button
+              onClick={handleLogout}
+              className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm lg:text-base font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+            >
+              <LogOut className="h-5 w-5" />
+              Sair
+            </button>
+          ) : (
+            <Link
+              href="/login"
+              className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm lg:text-base font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+            >
+              <LogOut className="h-5 w-5" />
+              Login
+            </Link>
+          )}
+        </div>
+      </aside>
+    </>
   )
 }

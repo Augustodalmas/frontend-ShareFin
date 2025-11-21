@@ -32,13 +32,13 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md p-8">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-foreground">Login</h1>
-          <p className="mt-2 text-muted-foreground">Entre com suas credenciais</p>
+      <Card className="w-full max-w-md p-6 sm:p-8">
+        <div className="mb-6 sm:mb-8 text-center">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Login</h1>
+          <p className="mt-2 text-sm sm:text-base text-muted-foreground">Entre com suas credenciais</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input

@@ -103,24 +103,24 @@ export default function AccountsPage() {
   }
 
   const columns = [
-    { header: 'Nome da Conta', accessor: 'name' as const },
-    { header: 'Moeda', accessor: 'currency' as const },
+    { header: 'Nome da Conta', accessor: 'name' as const, className: 'text-sm sm:text-base' },
+    { header: 'Moeda', accessor: 'currency' as const, className: 'text-sm hidden sm:table-cell' },
     {
       header: 'Cor',
       accessor: (row: BankAccount) => (
         <div className="flex items-center gap-2">
           <div
-            className="w-6 h-6 rounded-full border"
+            className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border flex-shrink-0"
             style={{ backgroundColor: row.color }}
           />
-          <span className="text-sm">{row.color}</span>
+          <span className="text-xs sm:text-sm hidden md:inline">{row.color}</span>
         </div>
       ),
     },
     {
       header: 'Status',
       accessor: (row: BankAccount) => (
-        <span className={`text-sm ${
+        <span className={`text-xs sm:text-sm ${
           row.active ? 'text-green-600' : 'text-red-600'
         }`}>
           {row.active ? 'Ativa' : 'Inativa'}
@@ -132,7 +132,7 @@ export default function AccountsPage() {
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <main className="ml-64 flex-1 p-8">
+      <main className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-8 pt-20 lg:pt-8">
         <PageHeader
           title="Contas Bancárias"
           description="Gerencie suas contas bancárias"

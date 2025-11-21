@@ -7,7 +7,7 @@ import { DataTable } from '@/components/data-table'
 import { TransactionDialog } from '@/components/transaction-dialog'
 import { Button } from '@/components/ui/button'
 import { Plus, TrendingUp, TrendingDown } from 'lucide-react'
-import { transactionsAPI, getUserIdFromToken } from '@/lib/api'
+import { transactionsAPI, getUserIdFromToken, categoriesAPI, accountsAPI } from '@/lib/api'
 
 interface Transaction {
   id: number
@@ -31,18 +31,28 @@ export default function TransactionsPage() {
 
   const loadTransactions = async () => {
     try {
-      const data = await transactionsAPI.getAll()
-      const mapped = data.map((item: any) => ({
-        id: item.id,
-        name: item.obs || 'Sem descrição',
-        type: item.valor > 0 ? 'entrada' : 'saida',
-        category: item.categoria_nome || 'Sem categoria',
-        categoryId: item.categoria_id,
-        account: item.conta_nome || 'Sem conta',
-        accountId: item.conta_id,
-        amount: Math.abs(item.valor),
-        date: item.data_transacao.split('T')[0],
-      }))
+      const [data, categories, accounts] = await Promise.all([
+        transactionsAPI.getAll(),
+        categoriesAPI.getAll(),
+        accountsAPI.getAll()
+      ])
+      
+      const mapped = data.map((item: any) => {
+        const category = categories.find((c: any) => c.nome === item.categoria)
+        const account = accounts.find((a: any) => a.nome === item.conta)
+        
+        return {
+          id: item.id,
+          name: item.obs || 'Sem descrição',
+          type: item.valor > 0 ? 'entrada' : 'saida',
+          category: item.categoria || 'Sem categoria',
+          categoryId: category?.id || 0,
+          account: item.conta || 'Sem conta',
+          accountId: account?.id || 0,
+          amount: Math.abs(item.valor),
+          date: item.data_transacao.split('T')[0],
+        }
+      })
       setTransactions(mapped)
     } catch (error) {
       console.error('Erro ao carregar transações:', error)
@@ -57,7 +67,7 @@ export default function TransactionsPage() {
   >()
 
   const handleSave = async (
-    transactionData: Omit<Transaction, 'id'> | Transaction
+    transactionData: any
   ) => {
     try {
       const userId = getUserIdFromToken()
@@ -67,6 +77,7 @@ export default function TransactionsPage() {
         categoria: parseInt(transactionData.category),
         valor: transactionData.type === 'entrada' ? transactionData.amount : -transactionData.amount,
         obs: transactionData.name,
+        data_transacao: transactionData.date,
       }
       
       if (!userId) {
@@ -89,7 +100,11 @@ export default function TransactionsPage() {
   }
 
   const handleEdit = (transaction: Transaction) => {
-    setEditingTransaction(transaction)
+    setEditingTransaction({
+      ...transaction,
+      category: transaction.categoryId.toString(),
+      account: transaction.accountId.toString(),
+    } as any)
     setDialogOpen(true)
   }
 
@@ -124,21 +139,21 @@ export default function TransactionsPage() {
     {
       header: 'Nome',
       accessor: (row: Transaction) => (
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <div
-            className={`rounded-full p-2 ${
+            className={`rounded-full p-1 sm:p-1.5 flex-shrink-0 ${
               row.type === 'entrada' ? 'bg-green-100' : 'bg-red-100'
             }`}
           >
             {row.type === 'entrada' ? (
-              <TrendingUp className="h-4 w-4 text-green-600" />
+              <TrendingUp className="h-3 w-3 text-green-600" />
             ) : (
-              <TrendingDown className="h-4 w-4 text-red-600" />
+              <TrendingDown className="h-3 w-3 text-red-600" />
             )}
           </div>
-          <div>
-            <p className="font-medium text-foreground">{row.name}</p>
-            <p className="text-sm text-muted-foreground">{row.category}</p>
+          <div className="min-w-0">
+            <p className="font-medium text-foreground text-xs sm:text-sm truncate">{row.name}</p>
+            <p className="text-xs text-muted-foreground truncate">{row.category}</p>
           </div>
         </div>
       ),
@@ -146,18 +161,18 @@ export default function TransactionsPage() {
     {
       header: 'Conta',
       accessor: 'account' as const,
-      className: 'text-muted-foreground',
+      className: 'text-muted-foreground text-xs sm:text-sm hidden sm:table-cell',
     },
     {
       header: 'Data',
       accessor: (row: Transaction) => formatDate(row.date),
-      className: 'text-muted-foreground',
+      className: 'text-muted-foreground text-xs',
     },
     {
       header: 'Valor',
       accessor: (row: Transaction) => (
         <span
-          className={`text-lg font-semibold ${
+          className={`text-xs sm:text-sm font-semibold whitespace-nowrap ${
             row.type === 'entrada' ? 'text-green-600' : 'text-red-600'
           }`}
         >
@@ -171,7 +186,7 @@ export default function TransactionsPage() {
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <main className="ml-64 flex-1 p-8">
+      <main className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-8 pt-20 lg:pt-8">
         <PageHeader
           title="Transações"
           description="Gerencie todas as suas transações financeiras"
