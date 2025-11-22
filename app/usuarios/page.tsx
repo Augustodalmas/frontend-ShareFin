@@ -1,13 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Sidebar } from '@/components/sidebar'
 import { PageHeader } from '@/components/page-header'
 import { DataTable } from '@/components/data-table'
 import { UserDialog } from '@/components/user-dialog'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
-import { usersAPI } from '@/lib/api'
+import { usersAPI, isAdmin } from '@/lib/api'
 
 interface User {
   id: number
@@ -17,11 +18,19 @@ interface User {
 }
 
 export default function UsersPage() {
+  const router = useRouter()
   const [users, setUsers] = useState<User[]>([])
+  const [userIsAdmin, setUserIsAdmin] = useState(false)
 
   useEffect(() => {
+    const adminStatus = isAdmin()
+    if (!adminStatus) {
+      router.push('/')
+      return
+    }
+    setUserIsAdmin(adminStatus)
     loadUsers()
-  }, [])
+  }, [router])
 
   const loadUsers = async () => {
     try {
@@ -100,20 +109,22 @@ export default function UsersPage() {
       <main className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-8 pt-20 lg:pt-8">
         <PageHeader
           title="Usuários"
-          description="Gerencie os usuários do sistema"
+          description={userIsAdmin ? "Gerencie os usuários do sistema" : "Visualize seu perfil"}
           action={
-            <Button onClick={handleAdd}>
-              <Plus className="mr-2 h-4 w-4" />
-              Adicionar Usuário
-            </Button>
+            userIsAdmin ? (
+              <Button onClick={handleAdd}>
+                <Plus className="mr-2 h-4 w-4" />
+                Adicionar Usuário
+              </Button>
+            ) : undefined
           }
         />
 
         <DataTable
           data={users}
           columns={columns}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
+          onEdit={userIsAdmin ? handleEdit : undefined}
+          onDelete={userIsAdmin ? handleDelete : undefined}
         />
 
         <UserDialog

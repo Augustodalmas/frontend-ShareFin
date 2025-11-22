@@ -17,7 +17,19 @@ function getUserIdFromToken() {
   }
 }
 
-export { getUserIdFromToken }
+function isAdmin() {
+  const token = getToken()
+  if (!token) return false
+  
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return payload.is_admin === true
+  } catch {
+    return false
+  }
+}
+
+export { getUserIdFromToken, isAdmin }
 
 async function fetchAPI(endpoint: string, options?: RequestInit) {
   const url = `${API_BASE_URL}${endpoint}`

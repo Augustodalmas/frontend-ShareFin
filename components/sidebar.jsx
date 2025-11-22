@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { LayoutDashboard, Users, Building2, Tag, Receipt, LogOut, Menu, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { authAPI } from '@/lib/api'
+import { authAPI, isAdmin } from '@/lib/api'
 import { useState, useEffect } from 'react'
 
 const menuItems = [
@@ -40,9 +40,11 @@ export function Sidebar() {
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [userIsAdmin, setUserIsAdmin] = useState(false)
 
   useEffect(() => {
     setIsLoggedIn(!!localStorage.getItem('token'))
+    setUserIsAdmin(isAdmin())
   }, [])
 
   useEffect(() => {
@@ -85,6 +87,8 @@ export function Sidebar() {
         </div>
         <nav className="flex-1 space-y-1 p-4 overflow-y-auto">
           {menuItems.map((item) => {
+            if (item.href === '/usuarios' && !userIsAdmin) return null
+            
             const Icon = item.icon
             const isActive = pathname === item.href
             return (
