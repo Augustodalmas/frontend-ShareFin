@@ -23,6 +23,9 @@ interface Transaction {
 
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([])
+  const [selectedAccount, setSelectedAccount] = useState<string>('all')
+  const [accounts, setAccounts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -54,12 +57,22 @@ export default function TransactionsPage() {
         }
       })
       setTransactions(mapped)
+      setFilteredTransactions(mapped)
+      setAccounts(accounts)
     } catch (error) {
       console.error('Erro ao carregar transações:', error)
     } finally {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (selectedAccount === 'all') {
+      setFilteredTransactions(transactions)
+    } else {
+      setFilteredTransactions(transactions.filter(t => t.accountId.toString() === selectedAccount))
+    }
+  }, [selectedAccount, transactions])
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingTransaction, setEditingTransaction] = useState<
@@ -71,28 +84,34 @@ export default function TransactionsPage() {
   ) => {
     try {
       const userId = getUserIdFromToken()
-      const payload = {
-        user: userId,
-        conta: parseInt(transactionData.account),
-        categoria: parseInt(transactionData.category),
-        valor: transactionData.type === 'entrada' ? transactionData.amount : -transactionData.amount,
-        obs: transactionData.name,
-        data_transacao: transactionData.date,
-      }
       
-      if (!userId) {
+      if (!userId && !('id' in transactionData)) {
         throw new Error('User ID not found in token. Please login again.')
       }
       
       if ('id' in transactionData) {
-        const { user, ...updatePayload } = payload
+        const updatePayload = {
+          conta: parseInt(transactionData.account),
+          categoria: parseInt(transactionData.category),
+          valor: transactionData.type === 'entrada' ? transactionData.amount : -transactionData.amount,
+          obs: transactionData.name,
+          data_transacao: transactionData.date,
+        }
         await transactionsAPI.update(transactionData.id, updatePayload)
       } else {
-        await transactionsAPI.create(payload)
+        const createPayload = {
+          user: userId,
+          conta: parseInt(transactionData.account),
+          categoria: parseInt(transactionData.category),
+          valor: transactionData.type === 'entrada' ? transactionData.amount : -transactionData.amount,
+          obs: transactionData.name,
+          data_transacao: transactionData.date,
+        }
+        await transactionsAPI.create(createPayload)
       }
-      await loadTransactions()
-      setEditingTransaction(undefined)
       setDialogOpen(false)
+      setEditingTransaction(undefined)
+      await loadTransactions()
     } catch (error) {
       console.error('Erro ao salvar transação:', error)
       alert(`Erro ao salvar transação: ${error.message}`)
@@ -198,8 +217,23 @@ export default function TransactionsPage() {
           }
         />
 
+        <div className="mb-4">
+          <select
+            value={selectedAccount}
+            onChange={(e) => setSelectedAccount(e.target.value)}
+            className="px-4 py-2 rounded-lg border border-border bg-card text-foreground text-sm"
+          >
+            <option value="all">Todas as contas</option>
+            {accounts.map((account) => (
+              <option key={account.id} value={account.id.toString()}>
+                {account.nome}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <DataTable
-          data={transactions}
+          data={filteredTransactions}
           columns={columns}
           onEdit={handleEdit}
           onDelete={handleDelete}
