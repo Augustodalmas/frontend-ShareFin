@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/sidebar'
 import { PageHeader } from '@/components/page-header'
 import { DataTable } from '@/components/data-table'
 import { AccountDialog } from '@/components/account-dialog'
+import { FeedbackWidget } from '@/components/feedback-widget'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import { accountsAPI, getUserIdFromToken } from '@/lib/api'
@@ -132,6 +133,7 @@ export default function AccountsPage() {
   return (
     <div className="flex min-h-screen">
       <Sidebar />
+      <FeedbackWidget />
       <main className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-8 pt-20 lg:pt-8">
         <PageHeader
           title="Contas Bancárias"

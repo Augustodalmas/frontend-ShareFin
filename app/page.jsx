@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/sidebar'
 import { PageHeader } from '@/components/page-header'
 import { StatCard } from '@/components/stat-card'
 import { Card } from '@/components/ui/card'
+import { FeedbackWidget } from '@/components/feedback-widget'
 import { TrendingUp, TrendingDown, Wallet, Receipt, Building2, Tag } from 'lucide-react'
 import { transactionsAPI, accountsAPI, categoriesAPI } from '@/lib/api'
 
@@ -112,6 +113,7 @@ export default function DashboardPage() {
   return (
     <div className="flex min-h-screen">
       <Sidebar />
+      <FeedbackWidget />
       <main className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-8 pt-20 lg:pt-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 lg:mb-8">
           <div>
