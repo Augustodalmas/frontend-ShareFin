@@ -83,7 +83,7 @@ export function Sidebar() {
         )}
       >
         <div className="flex h-16 items-center border-b border-border px-6">
-          <h1 className="text-lg lg:text-xl font-semibold text-foreground">Gestão Financeira</h1>
+          <h1 className="text-lg lg:text-xl font-semibold text-foreground">ShareFin</h1>
         </div>
         <nav className="flex-1 space-y-1 p-4 overflow-y-auto">
           {menuItems.map((item) => {
