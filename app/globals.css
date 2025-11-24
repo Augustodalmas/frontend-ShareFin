@@ -135,3 +135,12 @@
     display: none;
   }
 }
+
+/* Esconder error overlay do Next.js */
+nextjs-portal {
+  display: none !important;
+}
+
+#__next-build-watcher {
+  display: none !important;
+}

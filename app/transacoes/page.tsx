@@ -204,10 +204,10 @@ export default function TransactionsPage() {
   ]
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen overflow-x-hidden">
       <Sidebar />
       <FeedbackWidget />
-      <main className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-8 pt-20 lg:pt-8">
+      <main className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-8 pt-20 lg:pt-8 max-w-full overflow-x-hidden">
         <PageHeader
           title="Transações"
           description="Gerencie todas as suas transações financeiras"

@@ -14,6 +14,7 @@ const nextConfig = {
     buildActivity: false,
     buildActivityPosition: 'bottom-right',
   },
+  reactStrictMode: false,
 }
 
 export default nextConfig
