@@ -159,22 +159,9 @@ export default function TransactionsPage() {
     {
       header: 'Nome',
       accessor: (row: Transaction) => (
-        <div className="flex items-center gap-2">
-          <div
-            className={`rounded-full p-1 sm:p-1.5 flex-shrink-0 ${
-              row.type === 'entrada' ? 'bg-green-100' : 'bg-red-100'
-            }`}
-          >
-            {row.type === 'entrada' ? (
-              <TrendingUp className="h-3 w-3 text-green-600" />
-            ) : (
-              <TrendingDown className="h-3 w-3 text-red-600" />
-            )}
-          </div>
-          <div className="min-w-0">
-            <p className="font-medium text-foreground text-xs sm:text-sm truncate">{row.name}</p>
-            <p className="text-xs text-muted-foreground truncate">{row.category}</p>
-          </div>
+        <div className="min-w-0">
+          <p className="font-medium text-foreground text-xs sm:text-sm truncate">{row.name}</p>
+          <p className="text-xs text-muted-foreground truncate">{row.category}</p>
         </div>
       ),
     },

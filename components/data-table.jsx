@@ -12,7 +12,7 @@ import { Pencil, Trash2 } from 'lucide-react'
 export function DataTable({ data, columns, onEdit, onDelete }) {
   return (
     <div className="rounded-lg border border-border bg-card overflow-hidden w-full">
-      <div className="overflow-x-auto w-full">
+      <div className="w-full">
         <Table>
           <TableHeader>
             <TableRow>
