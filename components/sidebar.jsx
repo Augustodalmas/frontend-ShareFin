@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { LayoutDashboard, Users, Building2, Tag, Receipt, LogOut, Menu, X } from 'lucide-react'
+import { LayoutDashboard, Users, Building2, Tag, Receipt, Share2, LogOut, Menu, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { authAPI, isAdmin } from '@/lib/api'
 import { useState, useEffect } from 'react'
@@ -22,6 +22,11 @@ const menuItems = [
     title: 'Contas Bancárias',
     href: '/contas',
     icon: Building2,
+  },
+  {
+    title: 'Compartilhadas',
+    href: '/compartilhadas',
+    icon: Share2,
   },
   {
     title: 'Categorias',
@@ -90,7 +95,7 @@ export function Sidebar() {
         <nav className="flex-1 space-y-1 p-4 overflow-y-auto">
           {menuItems.map((item) => {
             if (item.href === '/usuarios' && !userIsAdmin) return null
-            
+
             const Icon = item.icon
             const isActive = pathname === item.href
             return (

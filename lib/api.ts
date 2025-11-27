@@ -68,6 +68,7 @@ async function fetchAPI(endpoint: string, options?: RequestInit) {
 // Transações
 export const transactionsAPI = {
   getAll: () => fetchAPI('/transactions'),
+  getShared: () => fetchAPI('/transactions/share'),
   create: (data: any) => fetchAPI('/transactions', { method: 'POST', body: JSON.stringify(data) }),
   update: (id: number, data: any) => fetchAPI(`/transactions/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   delete: (id: number) => fetchAPI(`/transactions/${id}`, { method: 'DELETE' }),

@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { usersAPI } from '@/lib/api'
 
 const currencies = [
   { value: 'BRL', label: 'Real (BRL)' },
@@ -37,25 +38,74 @@ export function AccountDialog({ open, onOpenChange, account, onSave }) {
     currency: 'BRL',
     color: colors[0],
     active: true,
+    share: false,
+    sharewith: null,
   })
+  const [users, setUsers] = useState([])
+  const [searchTerm, setSearchTerm] = useState('')
+  const [showUserList, setShowUserList] = useState(false)
+  const [selectedUserName, setSelectedUserName] = useState('')
 
   useEffect(() => {
-    if (account) {
-      setFormData({
-        name: account.name,
-        currency: account.currency,
-        color: account.color,
-        active: account.active,
-      })
-    } else {
-      setFormData({
-        name: '',
-        currency: 'BRL',
-        color: colors[0],
-        active: true,
-      })
+    const init = async () => {
+      if (open) {
+        const loadedUsers = await loadUsers()
+        
+        if (account) {
+          setFormData({
+            name: account.name,
+            currency: account.currency,
+            color: account.color,
+            active: account.active,
+            share: account.share || false,
+            sharewith: account.sharewith || null,
+          })
+          // Carregar nome do usuário compartilhado
+          if (account.sharewith && loadedUsers.length > 0) {
+            const user = loadedUsers.find(u => u.id === account.sharewith)
+            if (user) {
+              setSelectedUserName(user.nome)
+            }
+          } else {
+            setSelectedUserName('')
+          }
+        } else {
+          setFormData({
+            name: '',
+            currency: 'BRL',
+            color: colors[0],
+            active: true,
+            share: false,
+            sharewith: null,
+          })
+          setSelectedUserName('')
+        }
+      }
     }
+    init()
   }, [account, open])
+
+  const loadUsers = async () => {
+    try {
+      const data = await usersAPI.getAll()
+      setUsers(data)
+      return data
+    } catch (error) {
+      console.error('Erro ao carregar usuários:', error)
+      return []
+    }
+  }
+
+  const filteredUsers = users.filter(user => 
+    user.nome.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
+  const handleUserSelect = (user) => {
+    setFormData({ ...formData, sharewith: user.id })
+    setSelectedUserName(user.nome)
+    setSearchTerm('')
+    setShowUserList(false)
+  }
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -125,7 +175,7 @@ export function AccountDialog({ open, onOpenChange, account, onSave }) {
                 ))}
               </div>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3">
               <input
                 type="checkbox"
                 id="active"
@@ -133,10 +183,63 @@ export function AccountDialog({ open, onOpenChange, account, onSave }) {
                 onChange={(e) =>
                   setFormData({ ...formData, active: e.target.checked })
                 }
-                className="rounded"
+                className="w-5 h-5 rounded cursor-pointer"
               />
-              <Label htmlFor="active">Conta ativa</Label>
+              <Label htmlFor="active" className="cursor-pointer text-sm sm:text-base">Conta ativa</Label>
             </div>
+            <div className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                id="share"
+                checked={formData.share}
+                onChange={(e) => {
+                  setFormData({ ...formData, share: e.target.checked })
+                  if (!e.target.checked) {
+                    setFormData({ ...formData, share: false, sharewith: null })
+                    setSelectedUserName('')
+                  }
+                }}
+                className="w-5 h-5 rounded cursor-pointer"
+              />
+              <Label htmlFor="share" className="cursor-pointer text-sm sm:text-base">Conta compartilhada</Label>
+            </div>
+            {formData.share && (
+              <div className="space-y-2">
+                <Label htmlFor="sharewith">Compartilhar com</Label>
+                <div className="relative">
+                  <Input
+                    id="sharewith"
+                    value={selectedUserName || searchTerm}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value)
+                      setShowUserList(true)
+                    }}
+                    onFocus={() => setShowUserList(true)}
+                    placeholder="Digite o nome do usuário..."
+                    required={formData.share}
+                  />
+                  {showUserList && searchTerm && filteredUsers.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-md shadow-lg max-h-48 overflow-y-auto">
+                      {filteredUsers.map((user) => (
+                        <button
+                          key={user.id}
+                          type="button"
+                          onClick={() => handleUserSelect(user)}
+                          className="w-full text-left px-4 py-2 hover:bg-accent text-sm"
+                        >
+                          {user.nome}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {selectedUserName && (
+                  <p className="text-xs text-muted-foreground">
+                    Selecionado: <span className="font-medium">{selectedUserName}</span>
+                  </p>
+                )}
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button

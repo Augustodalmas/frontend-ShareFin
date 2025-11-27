@@ -16,6 +16,8 @@ interface BankAccount {
   currency: string
   color: string
   active: boolean
+  share: boolean
+  sharewith?: number
 }
 
 export default function AccountsPage() {
@@ -34,6 +36,8 @@ export default function AccountsPage() {
         currency: item.moeda,
         color: item.cor,
         active: item.ativa,
+        share: item.share || false,
+        sharewith: item.sharewith || null,
       }))
       setAccounts(mapped)
     } catch (error) {
@@ -44,18 +48,23 @@ export default function AccountsPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingAccount, setEditingAccount] = useState<BankAccount | undefined>()
 
-  const handleSave = async (accountData: Omit<BankAccount, 'id'> | BankAccount) => {
+  const handleSave = async (accountData: any) => {
     try {
       const userId = getUserIdFromToken()
-      
+
       const payload: any = {
         user: userId,
         nome: accountData.name,
         moeda: accountData.currency,
         cor: accountData.color,
         ativa: accountData.active,
+        share: accountData.share,
       }
-      
+
+      if (accountData.share && accountData.sharewith) {
+        payload.sharewith = accountData.sharewith
+      }
+
       if ('id' in accountData) {
         const { user, ...updatePayload } = payload
         await accountsAPI.update(accountData.id, updatePayload)
@@ -63,7 +72,7 @@ export default function AccountsPage() {
         if (!userId) {
           throw new Error('User ID not found in token. Please login again.')
         }
-        
+
         await accountsAPI.create(payload)
       }
       await loadAccounts()
@@ -121,10 +130,18 @@ export default function AccountsPage() {
     {
       header: 'Status',
       accessor: (row: BankAccount) => (
-        <span className={`text-xs sm:text-sm ${
-          row.active ? 'text-green-600' : 'text-red-600'
-        }`}>
+        <span className={`text-xs sm:text-sm ${row.active ? 'text-green-600' : 'text-red-600'
+          }`}>
           {row.active ? 'Ativa' : 'Inativa'}
+        </span>
+      ),
+    },
+    {
+      header: 'Compartilhamento',
+      accessor: (row: BankAccount) => (
+        <span className={`text-xs sm:text-sm font-medium ${row.share ? 'text-green-600' : 'text-muted-foreground'
+          }`}>
+          {row.share ? 'Ativado' : 'Desativado'}
         </span>
       ),
     },
