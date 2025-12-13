@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { getIconComponent, IconPicker } from '@/components/icon-picker'
 
 export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
   const [formData, setFormData] = useState({
@@ -35,7 +36,7 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
   const [accounts, setAccounts] = useState([])
   const [showCategoryDialog, setShowCategoryDialog] = useState(false)
   const [showAccountDialog, setShowAccountDialog] = useState(false)
-  const [newCategory, setNewCategory] = useState({ name: '', color: '#3b82f6', type: 1 })
+  const [newCategory, setNewCategory] = useState({ name: '', color: '#3b82f6', type: 1, icone: 'ShoppingCart' })
   const [newAccount, setNewAccount] = useState({ name: '', currency: 'BRL', color: '#3b82f6' })
 
   useEffect(() => {
@@ -70,6 +71,7 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
   const loadCategories = async () => {
     try {
       const data = await categoriesAPI.getAll()
+      console.log('Categorias carregadas no form transação:', data)
       const mapped = data.map((item) => ({
         ...item,
         tipo: parseInt(item.tipo)
@@ -109,7 +111,8 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
         nome: newCategory.name,
         cor: newCategory.color,
         tipo: newCategory.type,
-        valor_inicial: 0
+        valor_inicial: 0,
+        icone: newCategory.icone
       })
       const updatedCategories = await categoriesAPI.getAll()
       const mapped = updatedCategories.map((item) => ({
@@ -124,7 +127,7 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
         setFormData({ ...formData, category: createdId.toString(), type: newType })
       }
       setShowCategoryDialog(false)
-      setNewCategory({ name: '', color: '#3b82f6', type: 1 })
+      setNewCategory({ name: '', color: '#3b82f6', type: 1, icone: 'ShoppingCart' })
     } catch (error) {
       console.error('Erro ao criar categoria:', error)
     }
@@ -227,11 +230,17 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
                     <SelectValue placeholder="Selecione a categoria" />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id.toString()}>
-                        {category.nome}
-                      </SelectItem>
-                    ))}
+                    {categories.map((category) => {
+                      const IconComponent = getIconComponent(category.icone)
+                      return (
+                        <SelectItem key={category.id} value={category.id.toString()}>
+                          <div className="flex items-center gap-2">
+                            <IconComponent className="h-4 w-4" style={{ color: category.cor }} />
+                            <span>{category.nome}</span>
+                          </div>
+                        </SelectItem>
+                      )
+                    })}
                   </SelectContent>
                 </Select>
                 <Button type="button" size="icon" variant="outline" onClick={() => setShowCategoryDialog(true)}>
@@ -239,13 +248,17 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
                 </Button>
               </div>
               {showCategoryDialog && (
-                <div className="border rounded-lg p-3 space-y-2 bg-muted/50">
+                <div className="border rounded-lg p-3 space-y-3 bg-muted/50">
                   <Input placeholder="Nome da categoria" value={newCategory.name} onChange={(e) => setNewCategory({...newCategory, name: e.target.value})} />
-                  <select className="w-full px-3 py-2 rounded-md border" value={newCategory.type} onChange={(e) => setNewCategory({...newCategory, type: parseInt(e.target.value)})}>
+                  <select className="w-full px-3 py-2 rounded-md border bg-background" value={newCategory.type} onChange={(e) => setNewCategory({...newCategory, type: parseInt(e.target.value)})}>
                     <option value={1}>Despesa</option>
                     <option value={2}>Receita</option>
                   </select>
-                  <Input type="color" value={newCategory.color} onChange={(e) => setNewCategory({...newCategory, color: e.target.value})} />
+                  <IconPicker value={newCategory.icone} onChange={(icone) => setNewCategory({...newCategory, icone})} />
+                  <div>
+                    <Label className="text-xs">Cor</Label>
+                    <Input type="color" value={newCategory.color} onChange={(e) => setNewCategory({...newCategory, color: e.target.value})} className="h-10" />
+                  </div>
                   <div className="flex gap-2">
                     <Button type="button" size="sm" onClick={handleCreateCategory} className="flex-1">Criar</Button>
                     <Button type="button" size="sm" variant="outline" onClick={() => setShowCategoryDialog(false)} className="flex-1">Cancelar</Button>

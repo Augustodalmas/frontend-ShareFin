@@ -9,12 +9,14 @@ import { FeedbackWidget } from '@/components/feedback-widget'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import { categoriesAPI } from '@/lib/api'
+import { getIconComponent } from '@/components/icon-picker'
 
 interface Category {
   id: number
   name: string
   color: string
   type: 1 | 2
+  icone?: string
 }
 
 export default function CategoriesPage() {
@@ -27,12 +29,15 @@ export default function CategoriesPage() {
   const loadCategories = async () => {
     try {
       const data = await categoriesAPI.getAll()
+      console.log('Dados recebidos do backend:', data)
       const mapped = data.map((item: any) => ({
         id: item.id,
         name: item.nome,
         color: item.cor,
         type: parseInt(item.tipo),
+        icone: item.icone,
       }))
+      console.log('Categorias mapeadas:', mapped)
       setCategories(mapped)
     } catch (error) {
       console.error('Erro ao carregar categorias:', error)
@@ -49,7 +54,9 @@ export default function CategoriesPage() {
         cor: categoryData.color,
         tipo: categoryData.type,
         valor_inicial: 0,
+        icone: categoryData.icone || 'ShoppingCart',
       }
+      console.log('Payload enviado:', payload)
       if ('id' in categoryData) {
         await categoriesAPI.update(categoryData.id, payload)
       } else {
@@ -84,27 +91,24 @@ export default function CategoriesPage() {
   }
 
   const columns = [
-    { header: 'Nome da Categoria', accessor: 'name' as const, className: 'text-sm sm:text-base' },
+    {
+      header: 'Nome da Categoria',
+      accessor: (row: Category) => {
+        const IconComponent = getIconComponent(row.icone)
+        return (
+          <div className="flex items-center gap-2">
+            <IconComponent className="h-4 w-4 sm:h-5 sm:w-5" style={{ color: row.color }} />
+            <span className="text-sm sm:text-base">{row.name}</span>
+          </div>
+        )
+      },
+    },
     {
       header: 'Tipo',
       accessor: (row: Category) => (
         <span className="text-xs sm:text-sm text-muted-foreground">
           {row.type === 1 ? 'Despesa' : 'Receita'}
         </span>
-      ),
-    },
-    {
-      header: 'Cor',
-      accessor: (row: Category) => (
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div
-            className="h-6 w-6 sm:h-8 sm:w-8 rounded-lg border border-border flex-shrink-0"
-            style={{ backgroundColor: row.color }}
-          />
-          <span className="text-xs sm:text-sm font-medium text-muted-foreground hidden md:inline">
-            {row.color}
-          </span>
-        </div>
       ),
     },
   ]

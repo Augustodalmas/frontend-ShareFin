@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { IconPicker } from '@/components/icon-picker'
 
 const colorOptions = [
   { name: 'Azul', value: '#3b82f6' },
@@ -28,6 +29,7 @@ export function CategoryDialog({ open, onOpenChange, category, onSave }) {
     name: '',
     color: colorOptions[0].value,
     type: 1,
+    icone: 'ShoppingCart',
   })
 
   useEffect(() => {
@@ -37,12 +39,14 @@ export function CategoryDialog({ open, onOpenChange, category, onSave }) {
           name: category.name,
           color: category.color,
           type: category.type,
+          icone: category.icone || 'ShoppingCart',
         })
       } else {
         setFormData({
           name: '',
           color: colorOptions[0].value,
           type: 1,
+          icone: 'ShoppingCart',
         })
       }
     }
@@ -107,6 +111,10 @@ export function CategoryDialog({ open, onOpenChange, category, onSave }) {
                 </button>
               </div>
             </div>
+            <IconPicker
+              value={formData.icone}
+              onChange={(icone) => setFormData({ ...formData, icone })}
+            />
             <div className="space-y-2">
               <Label>Cor</Label>
               <div className="grid grid-cols-4 gap-3">
