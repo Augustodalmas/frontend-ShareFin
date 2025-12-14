@@ -3,31 +3,46 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { authAPI } from '@/lib/api'
+import { usersAPI } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
 import { Eye, EyeOff } from 'lucide-react'
 
-export default function LoginPage() {
+export default function RegisterPage() {
+  const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
+  const [confirmSenha, setConfirmSenha] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+
+    if (senha !== confirmSenha) {
+      setError('As senhas não coincidem')
+      return
+    }
+
     setLoading(true)
 
     try {
-      await authAPI.login(email, senha)
-      router.push('/')
+      await usersAPI.create({
+        nome,
+        email,
+        senha,
+        is_admin: false
+      })
+      alert('Conta criada com sucesso! Faça login para continuar.')
+      router.push('/login')
     } catch (err) {
-      setError('Email ou senha inválidos')
+      setError('Erro ao criar conta. Tente novamente.')
     } finally {
       setLoading(false)
     }
@@ -40,10 +55,22 @@ export default function LoginPage() {
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
             ShareFin <span className="text-sm text-muted-foreground font-normal">v0.0.1</span>
           </h1>
-          <p className="mt-2 text-sm sm:text-base text-muted-foreground">Entre com suas credenciais</p>
+          <p className="mt-2 text-sm sm:text-base text-muted-foreground">Crie sua conta</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="nome">Nome</Label>
+            <Input
+              id="nome"
+              type="text"
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
+              placeholder="Seu nome completo"
+              required
+            />
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -66,7 +93,7 @@ export default function LoginPage() {
                 onChange={(e) => setSenha(e.target.value)}
                 placeholder="••••••••"
                 required
-                autoComplete="off"
+                autoComplete="new-password"
                 className="pr-10 [&::-ms-reveal]:hidden [&::-ms-clear]:hidden"
               />
               <button
@@ -79,6 +106,29 @@ export default function LoginPage() {
             </div>
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="confirmSenha">Confirmar Senha</Label>
+            <div className="relative">
+              <Input
+                id="confirmSenha"
+                type={showConfirmPassword ? "text" : "password"}
+                value={confirmSenha}
+                onChange={(e) => setConfirmSenha(e.target.value)}
+                placeholder="••••••••"
+                required
+                autoComplete="new-password"
+                className="pr-10 [&::-ms-reveal]:hidden [&::-ms-clear]:hidden"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
+          </div>
+
           {error && (
             <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
               {error}
@@ -86,13 +136,13 @@ export default function LoginPage() {
           )}
 
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Entrando...' : 'Entrar'}
+            {loading ? 'Criando conta...' : 'Criar conta'}
           </Button>
 
           <div className="text-center text-sm text-muted-foreground">
-            Não tem uma conta?{' '}
-            <Link href="/register" className="text-primary hover:underline">
-              Cadastre-se
+            Já tem uma conta?{' '}
+            <Link href="/login" className="text-primary hover:underline">
+              Faça login
             </Link>
           </div>
         </form>

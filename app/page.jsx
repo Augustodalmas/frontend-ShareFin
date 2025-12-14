@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card'
 import { FeedbackWidget } from '@/components/feedback-widget'
 import { TrendingUp, TrendingDown, Wallet, Receipt, Building2, Tag } from 'lucide-react'
 import { transactionsAPI, accountsAPI, categoriesAPI } from '@/lib/api'
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
 
 export default function DashboardPage() {
   const [stats, setStats] = useState({
@@ -18,10 +19,12 @@ export default function DashboardPage() {
     totalContas: 0,
     totalCategorias: 0
   })
-  const [recentTransactions, setRecentTransactions] = useState([])
+  const [entradasByCategory, setEntradasByCategory] = useState([])
+  const [saidasByCategory, setSaidasByCategory] = useState([])
   const [allTransactions, setAllTransactions] = useState([])
   const [accounts, setAccounts] = useState([])
   const [selectedAccount, setSelectedAccount] = useState('all')
+  const [dateFilter, setDateFilter] = useState('month')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -46,10 +49,37 @@ export default function DashboardPage() {
     }
   }
 
+  const getDateRange = () => {
+    const now = new Date()
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    
+    switch (dateFilter) {
+      case 'today':
+        return { start: today, end: new Date(today.getTime() + 86400000) }
+      case 'week':
+        const weekStart = new Date(today)
+        weekStart.setDate(today.getDate() - today.getDay())
+        return { start: weekStart, end: new Date(now.getTime() + 86400000) }
+      case 'month':
+        return { start: new Date(now.getFullYear(), now.getMonth(), 1), end: new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59) }
+      case 'year':
+        return { start: new Date(now.getFullYear(), 0, 1), end: new Date(now.getFullYear(), 11, 31, 23, 59, 59) }
+      default:
+        return { start: new Date(0), end: new Date() }
+    }
+  }
+
   const calculateStats = (transactions, accountsData, categoriesData) => {
-    const filtered = selectedAccount === 'all' 
-      ? transactions 
-      : transactions.filter(t => t.conta === accountsData.find(a => a.id.toString() === selectedAccount)?.nome)
+    const { start, end } = getDateRange()
+    
+    let filtered = transactions.filter(t => {
+      const transDate = new Date(t.data_transacao)
+      return transDate >= start && transDate <= end
+    })
+    
+    if (selectedAccount !== 'all') {
+      filtered = filtered.filter(t => t.conta === accountsData.find(a => a.id.toString() === selectedAccount)?.nome)
+    }
 
     const totalEntradas = filtered
       .filter(t => t.valor > 0)
@@ -59,16 +89,20 @@ export default function DashboardPage() {
       .filter(t => t.valor < 0)
       .reduce((sum, t) => sum + t.valor, 0))
 
-    const recent = filtered
-      .sort((a, b) => new Date(b.data_transacao) - new Date(a.data_transacao))
-      .slice(0, 4)
-      .map(t => ({
-        name: t.obs || 'Sem descrição',
-        category: t.categoria || 'Sem categoria',
-        date: new Date(t.data_transacao).toLocaleDateString('pt-BR'),
-        amount: Math.abs(t.valor),
-        type: t.valor > 0 ? 'entrada' : 'saida'
-      }))
+    const entradasMap = {}
+    const saidasMap = {}
+
+    filtered.forEach(t => {
+      const categoria = t.categoria || 'Sem categoria'
+      if (t.valor > 0) {
+        entradasMap[categoria] = (entradasMap[categoria] || 0) + t.valor
+      } else {
+        saidasMap[categoria] = (saidasMap[categoria] || 0) + Math.abs(t.valor)
+      }
+    })
+
+    const entradasData = Object.entries(entradasMap).map(([name, value]) => ({ name, value }))
+    const saidasData = Object.entries(saidasMap).map(([name, value]) => ({ name, value }))
 
     setStats({
       totalEntradas,
@@ -79,7 +113,8 @@ export default function DashboardPage() {
       totalCategorias: categoriesData.length
     })
     
-    setRecentTransactions(recent)
+    setEntradasByCategory(entradasData)
+    setSaidasByCategory(saidasData)
   }
 
   useEffect(() => {
@@ -88,7 +123,7 @@ export default function DashboardPage() {
         calculateStats(allTransactions, accounts, categories)
       })
     }
-  }, [selectedAccount, allTransactions, accounts])
+  }, [selectedAccount, dateFilter, allTransactions, accounts])
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -115,23 +150,36 @@ export default function DashboardPage() {
       <Sidebar />
       <FeedbackWidget />
       <main className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-8 pt-20 lg:pt-8 max-w-full overflow-x-hidden">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 lg:mb-8">
+        <div className="flex flex-col gap-4 mb-6 lg:mb-8">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Dashboard</h1>
             <p className="mt-1 sm:mt-2 text-sm sm:text-base text-muted-foreground">Visão geral das suas finanças</p>
           </div>
-          <select
-            value={selectedAccount}
-            onChange={(e) => setSelectedAccount(e.target.value)}
-            className="px-4 py-2 rounded-lg border border-border bg-card text-foreground text-sm w-full sm:w-auto"
-          >
-            <option value="all">Todas as contas</option>
-            {accounts.map((account) => (
-              <option key={account.id} value={account.id.toString()}>
-                {account.nome}
-              </option>
-            ))}
-          </select>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <select
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              className="px-4 py-2 rounded-lg border border-border bg-card text-foreground text-sm w-full sm:w-auto"
+            >
+              <option value="today">Hoje</option>
+              <option value="week">Esta Semana</option>
+              <option value="month">Este Mês</option>
+              <option value="year">Este Ano</option>
+              <option value="all">Tudo</option>
+            </select>
+            <select
+              value={selectedAccount}
+              onChange={(e) => setSelectedAccount(e.target.value)}
+              className="px-4 py-2 rounded-lg border border-border bg-card text-foreground text-sm w-full sm:w-auto"
+            >
+              <option value="all">Todas as contas</option>
+              {accounts.map((account) => (
+                <option key={account.id} value={account.id.toString()}>
+                  {account.nome}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Summary Cards */}
@@ -201,43 +249,68 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* Recent Transactions */}
-        <Card className="mt-6 lg:mt-8 p-4 sm:p-6">
-          <h2 className="mb-4 text-lg sm:text-xl font-semibold text-foreground">
-            Transações Recentes
-          </h2>
-          <div className="space-y-4">
-            {recentTransactions.length > 0 ? (
-              recentTransactions.map((transaction, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between gap-4 border-b border-border pb-4 last:border-0 last:pb-0"
-                >
-                  <div className="space-y-1 min-w-0 flex-1">
-                    <p className="font-medium text-foreground text-sm sm:text-base truncate">{transaction.name}</p>
-                    <p className="text-xs sm:text-sm text-muted-foreground">
-                      {transaction.category} • {transaction.date}
-                    </p>
-                  </div>
-                  <p
-                    className={`text-base sm:text-lg font-semibold whitespace-nowrap ${
-                      transaction.type === 'entrada'
-                        ? 'text-green-600'
-                        : 'text-red-600'
-                    }`}
+        {/* Charts */}
+        <div className="grid gap-6 grid-cols-1 lg:grid-cols-2 mt-6 lg:mt-8">
+          <Card className="p-4 sm:p-6">
+            <h2 className="mb-4 text-lg sm:text-xl font-semibold text-foreground">
+              Entradas por Categoria
+            </h2>
+            {entradasByCategory.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={entradasByCategory}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
                   >
-                    {transaction.type === 'entrada' ? '+' : '-'}
-                    {formatCurrency(transaction.amount)}
-                  </p>
-                </div>
-              ))
+                    {entradasByCategory.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={`hsl(${index * 45}, 70%, 60%)`} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => formatCurrency(value)} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
             ) : (
-              <p className="text-muted-foreground text-center py-8">
-                Nenhuma transação encontrada
-              </p>
+              <p className="text-muted-foreground text-center py-8">Nenhuma entrada encontrada</p>
             )}
-          </div>
-        </Card>
+          </Card>
+
+          <Card className="p-4 sm:p-6">
+            <h2 className="mb-4 text-lg sm:text-xl font-semibold text-foreground">
+              Saídas por Categoria
+            </h2>
+            {saidasByCategory.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={saidasByCategory}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {saidasByCategory.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={`hsl(${index * 45 + 180}, 70%, 60%)`} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => formatCurrency(value)} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-muted-foreground text-center py-8">Nenhuma saída encontrada</p>
+            )}
+          </Card>
+        </div>
       </main>
     </div>
   )

@@ -35,13 +35,11 @@ export default function TransactionsPage() {
 
   const loadTransactions = async () => {
     try {
-      console.log('[DEBUG] Carregando transações...')
       const [data, categories, accounts] = await Promise.all([
         transactionsAPI.getAll(),
         categoriesAPI.getAll(),
         accountsAPI.getAll()
       ])
-      console.log('[DEBUG] Dados recebidos:', { data, categories, accounts })
       
       const mapped = data.map((item: any) => {
         const category = categories.find((c: any) => c.nome === item.categoria)
@@ -59,7 +57,6 @@ export default function TransactionsPage() {
           date: item.data_transacao.split('T')[0],
         }
       })
-      console.log('[DEBUG] Transações mapeadas:', mapped)
       setTransactions(mapped)
       setFilteredTransactions(mapped)
       setAccounts(accounts)
@@ -87,9 +84,7 @@ export default function TransactionsPage() {
     transactionData: any
   ) => {
     try {
-      console.log('[DEBUG] Salvando transação:', transactionData)
       const userId = getUserIdFromToken()
-      console.log('[DEBUG] User ID:', userId)
       
       if (!userId && !('id' in transactionData)) {
         throw new Error('User ID not found in token. Please login again.')
@@ -103,7 +98,6 @@ export default function TransactionsPage() {
           obs: transactionData.name,
           data_transacao: transactionData.date,
         }
-        console.log('[DEBUG] Update payload:', updatePayload)
         await transactionsAPI.update(transactionData.id, updatePayload)
       } else {
         const createPayload = {
@@ -114,10 +108,8 @@ export default function TransactionsPage() {
           obs: transactionData.name,
           data_transacao: transactionData.date,
         }
-        console.log('[DEBUG] Create payload:', createPayload)
         await transactionsAPI.create(createPayload)
       }
-      console.log('[DEBUG] Transação salva com sucesso')
       setDialogOpen(false)
       setEditingTransaction(undefined)
       await loadTransactions()
@@ -128,7 +120,6 @@ export default function TransactionsPage() {
   }
 
   const handleEdit = (transaction: Transaction) => {
-    console.log('[DEBUG] Editando transação:', transaction)
     setEditingTransaction({
       ...transaction,
       category: transaction.categoryId.toString(),
@@ -140,9 +131,7 @@ export default function TransactionsPage() {
   const handleDelete = async (transaction: Transaction) => {
     if (confirm('Tem certeza que deseja excluir esta transação?')) {
       try {
-        console.log('[DEBUG] Deletando transação:', transaction.id)
         await transactionsAPI.delete(transaction.id)
-        console.log('[DEBUG] Transação deletada com sucesso')
         await loadTransactions()
       } catch (error) {
         console.error('Erro ao excluir transação:', error)

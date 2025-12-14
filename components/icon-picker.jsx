@@ -32,10 +32,7 @@ export function IconPicker({ value, onChange }) {
                 ? 'border-primary bg-primary/10'
                 : 'border-border'
             }`}
-            onClick={() => {
-              console.log('Ícone selecionado:', name)
-              onChange(name)
-            }}
+            onClick={() => onChange(name)}
           >
             <Icon className="h-5 w-5" />
           </button>

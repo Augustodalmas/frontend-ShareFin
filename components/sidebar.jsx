@@ -38,6 +38,11 @@ const menuItems = [
     href: '/transacoes',
     icon: Receipt,
   },
+  {
+    title: 'Perfil',
+    href: '/perfil',
+    icon: Users,
+  },
 ]
 
 export function Sidebar() {

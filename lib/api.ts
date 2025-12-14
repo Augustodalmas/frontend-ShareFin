@@ -93,6 +93,7 @@ export const accountsAPI = {
 // Usuários
 export const usersAPI = {
   getAll: () => fetchAPI('/usuario'),
+  getById: (id: number) => fetchAPI(`/usuario/${id}`),
   create: (data: any) => fetchAPI('/usuario', { method: 'POST', body: JSON.stringify(data) }),
   update: (id: number, data: any) => fetchAPI(`/usuario/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   delete: (id: number) => fetchAPI(`/usuario/${id}`, { method: 'DELETE' }),

@@ -71,7 +71,6 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
   const loadCategories = async () => {
     try {
       const data = await categoriesAPI.getAll()
-      console.log('Categorias carregadas no form transação:', data)
       const mapped = data.map((item) => ({
         ...item,
         tipo: parseInt(item.tipo)

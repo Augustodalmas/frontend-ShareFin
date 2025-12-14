@@ -29,7 +29,6 @@ export default function CategoriesPage() {
   const loadCategories = async () => {
     try {
       const data = await categoriesAPI.getAll()
-      console.log('Dados recebidos do backend:', data)
       const mapped = data.map((item: any) => ({
         id: item.id,
         name: item.nome,
@@ -37,7 +36,6 @@ export default function CategoriesPage() {
         type: parseInt(item.tipo),
         icone: item.icone,
       }))
-      console.log('Categorias mapeadas:', mapped)
       setCategories(mapped)
     } catch (error) {
       console.error('Erro ao carregar categorias:', error)
@@ -56,7 +54,6 @@ export default function CategoriesPage() {
         valor_inicial: 0,
         icone: categoryData.icone || 'ShoppingCart',
       }
-      console.log('Payload enviado:', payload)
       if ('id' in categoryData) {
         await categoriesAPI.update(categoryData.id, payload)
       } else {
