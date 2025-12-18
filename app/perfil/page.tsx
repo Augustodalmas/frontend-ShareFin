@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { usersAPI, accountsAPI, transactionsAPI, getUserIdFromToken } from '@/lib/api'
-import { User, Wallet, Lock } from 'lucide-react'
+import { User, Wallet, Lock, Copy, Check } from 'lucide-react'
 
 export default function ProfilePage() {
   const [user, setUser] = useState<any>(null)
@@ -19,6 +19,7 @@ export default function ProfilePage() {
   const [formData, setFormData] = useState({ nome: '', email: '' })
   const [passwordData, setPasswordData] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' })
   const [loading, setLoading] = useState(false)
+  const [copiedCode, setCopiedCode] = useState(false)
 
   useEffect(() => {
     loadUserData()
@@ -36,6 +37,14 @@ export default function ProfilePage() {
       setFormData({ nome: currentUser.nome, email: currentUser.email })
     } catch (error) {
       console.error('Erro ao carregar usuário:', error)
+    }
+  }
+
+  const handleCopyCode = () => {
+    if (user?.shareCode) {
+      navigator.clipboard.writeText(user.shareCode)
+      setCopiedCode(true)
+      setTimeout(() => setCopiedCode(false), 2000)
     }
   }
 
@@ -135,6 +144,25 @@ export default function ProfilePage() {
                 <p className="text-sm text-muted-foreground">Última Atualização</p>
                 <p className="font-medium">{new Date(user.atualizado_em).toLocaleDateString('pt-BR')}</p>
               </div>
+              {user.shareCode && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Código de Compartilhamento</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <code className="text-sm bg-muted px-3 py-1 rounded font-mono">{user.shareCode}</code>
+                    <button
+                      onClick={handleCopyCode}
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                      title="Copiar código"
+                    >
+                      {copiedCode ? (
+                        <Check className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

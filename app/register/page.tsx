@@ -52,6 +52,7 @@ export default function RegisterPage() {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md p-6 sm:p-8">
         <div className="mb-6 sm:mb-8 text-center">
+          <img src="/logo-sharefin-bg.png" alt="ShareFin Logo" className="h-20 w-20 mx-auto mb-4" />
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
             ShareFin <span className="text-sm text-muted-foreground font-normal">v0.0.1</span>
           </h1>

@@ -61,8 +61,8 @@ export default function AccountsPage() {
         share: accountData.share,
       }
 
-      if (accountData.share && accountData.sharewith) {
-        payload.sharewith = accountData.sharewith
+      if (accountData.share && accountData.shareCode) {
+        payload.shareCode = accountData.shareCode
       }
 
       if ('id' in accountData) {

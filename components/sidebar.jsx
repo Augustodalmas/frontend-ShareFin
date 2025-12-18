@@ -92,7 +92,8 @@ export function Sidebar() {
           isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        <div className="flex h-16 items-center border-b border-border px-6">
+        <div className="flex h-16 items-center border-b border-border px-6 gap-3">
+          <img src="/logo-sharefin-bg.png" alt="ShareFin Logo" className="h-10 w-10" />
           <h1 className="text-lg lg:text-xl font-semibold text-foreground">
             ShareFin <span className="text-xs text-muted-foreground font-normal">v0.0.1</span>
           </h1>
