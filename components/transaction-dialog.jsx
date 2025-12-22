@@ -31,9 +31,11 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
     amount: '',
     date: new Date().toISOString().split('T')[0],
   })
-  
+
   const [categories, setCategories] = useState([])
   const [accounts, setAccounts] = useState([])
+  const [categoryError, setCategoryError] = useState('')
+  const [accountError, setAccountError] = useState('')
   const [showCategoryDialog, setShowCategoryDialog] = useState(false)
   const [showAccountDialog, setShowAccountDialog] = useState(false)
   const [newCategory, setNewCategory] = useState({ name: '', color: '#3b82f6', type: 1, icone: 'ShoppingCart' })
@@ -105,7 +107,15 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
   }
 
   const handleCreateCategory = async () => {
+
+    if (!newCategory.name.trim()) {
+      setCategoryError('Informe o nome da categoria')
+      return
+    }
+
     try {
+      setCategoryError('') // limpa erro anterior
+
       const created = await categoriesAPI.create({
         nome: newCategory.name,
         cor: newCategory.color,
@@ -113,31 +123,40 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
         valor_inicial: 0,
         icone: newCategory.icone
       })
+
       const updatedCategories = await categoriesAPI.getAll()
       const mapped = updatedCategories.map((item) => ({
         ...item,
         tipo: parseInt(item.tipo)
       }))
       setCategories(mapped)
-      
+
       const createdId = created?.id || mapped[mapped.length - 1]?.id
       if (createdId) {
         const newType = newCategory.type === 1 ? 'saida' : 'entrada'
         setFormData({ ...formData, category: createdId.toString(), type: newType })
       }
+
       setShowCategoryDialog(false)
       setNewCategory({ name: '', color: '#3b82f6', type: 1, icone: 'ShoppingCart' })
     } catch (error) {
       console.error('Erro ao criar categoria:', error)
+      setCategoryError('Erro ao criar categoria. Tente novamente.')
     }
   }
 
   const handleCreateAccount = async () => {
+    if (!newAccount.name.trim()) {
+      setAccountError('Informe o nome da conta')
+      return
+    }
     try {
+      setAccountError('') // limpa erro anterior
       const userId = getUserIdFromToken()
       if (!userId) {
         throw new Error('User ID not found')
       }
+
       const created = await accountsAPI.create({
         user: userId,
         nome: newAccount.name,
@@ -147,7 +166,7 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
       })
       const updatedAccounts = await accountsAPI.getAll()
       setAccounts(updatedAccounts)
-      
+
       const createdId = created?.id || updatedAccounts[updatedAccounts.length - 1]?.id
       if (createdId) {
         setFormData({ ...formData, account: createdId.toString() })
@@ -248,15 +267,20 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
               </div>
               {showCategoryDialog && (
                 <div className="border rounded-lg p-3 space-y-3 bg-muted/50">
-                  <Input placeholder="Nome da categoria" value={newCategory.name} onChange={(e) => setNewCategory({...newCategory, name: e.target.value})} />
-                  <select className="w-full px-3 py-2 rounded-md border bg-background" value={newCategory.type} onChange={(e) => setNewCategory({...newCategory, type: parseInt(e.target.value)})}>
+                  <Input placeholder="Nome da categoria" value={newCategory.name} onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })} />
+                  {categoryError && (
+                    <p className="text-sm text-red-500">
+                      {categoryError}
+                    </p>
+                  )}
+                  <select className="w-full px-3 py-2 rounded-md border bg-background" value={newCategory.type} onChange={(e) => setNewCategory({ ...newCategory, type: parseInt(e.target.value) })}>
                     <option value={1}>Despesa</option>
                     <option value={2}>Receita</option>
                   </select>
-                  <IconPicker value={newCategory.icone} onChange={(icone) => setNewCategory({...newCategory, icone})} />
+                  <IconPicker value={newCategory.icone} onChange={(icone) => setNewCategory({ ...newCategory, icone })} />
                   <div>
                     <Label className="text-xs">Cor</Label>
-                    <Input type="color" value={newCategory.color} onChange={(e) => setNewCategory({...newCategory, color: e.target.value})} className="h-10" />
+                    <Input type="color" value={newCategory.color} onChange={(e) => setNewCategory({ ...newCategory, color: e.target.value })} className="h-10" />
                   </div>
                   <div className="flex gap-2">
                     <Button type="button" size="sm" onClick={handleCreateCategory} className="flex-1">Criar</Button>
@@ -293,9 +317,14 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
               </div>
               {showAccountDialog && (
                 <div className="border rounded-lg p-3 space-y-2 bg-muted/50">
-                  <Input placeholder="Nome da conta" value={newAccount.name} onChange={(e) => setNewAccount({...newAccount, name: e.target.value})} />
-                  <Input placeholder="Moeda (ex: BRL)" value={newAccount.currency} onChange={(e) => setNewAccount({...newAccount, currency: e.target.value})} />
-                  <Input type="color" value={newAccount.color} onChange={(e) => setNewAccount({...newAccount, color: e.target.value})} />
+                  <Input placeholder="Nome da conta" value={newAccount.name} onChange={(e) => setNewAccount({ ...newAccount, name: e.target.value })} />
+                  {accountError && (
+                    <p className="text-sm text-red-500">
+                      {accountError}
+                    </p>
+                  )}
+                  <Input placeholder="Moeda (ex: BRL)" value={newAccount.currency} onChange={(e) => setNewAccount({ ...newAccount, currency: e.target.value })} />
+                  <Input type="color" value={newAccount.color} onChange={(e) => setNewAccount({ ...newAccount, color: e.target.value })} />
                   <div className="flex gap-2">
                     <Button type="button" size="sm" onClick={handleCreateAccount} className="flex-1">Criar</Button>
                     <Button type="button" size="sm" variant="outline" onClick={() => setShowAccountDialog(false)} className="flex-1">Cancelar</Button>
