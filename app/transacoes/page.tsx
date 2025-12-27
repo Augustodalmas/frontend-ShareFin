@@ -40,11 +40,11 @@ export default function TransactionsPage() {
         categoriesAPI.getAll(),
         accountsAPI.getAll()
       ])
-      
-      const mapped = data.map((item: any) => {
+
+      const mapped = data.resultado.map((item: any) => {
         const category = categories.find((c: any) => c.nome === item.categoria)
         const account = accounts.find((a: any) => a.nome === item.conta)
-        
+
         return {
           id: item.id,
           name: item.obs || 'Sem descrição',
@@ -85,11 +85,11 @@ export default function TransactionsPage() {
   ) => {
     try {
       const userId = getUserIdFromToken()
-      
+
       if (!userId && !('id' in transactionData)) {
         throw new Error('User ID not found in token. Please login again.')
       }
-      
+
       if ('id' in transactionData) {
         const updatePayload = {
           conta: parseInt(transactionData.account),
@@ -179,9 +179,8 @@ export default function TransactionsPage() {
       header: 'Valor',
       accessor: (row: Transaction) => (
         <span
-          className={`text-xs sm:text-sm font-semibold whitespace-nowrap ${
-            row.type === 'entrada' ? 'text-green-600' : 'text-red-600'
-          }`}
+          className={`text-xs sm:text-sm font-semibold whitespace-nowrap ${row.type === 'entrada' ? 'text-green-600' : 'text-red-600'
+            }`}
         >
           {row.type === 'entrada' ? '+' : '-'}
           {formatCurrency(row.amount)}

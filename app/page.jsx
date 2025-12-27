@@ -52,7 +52,7 @@ export default function DashboardPage() {
   const getDateRange = () => {
     const now = new Date()
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    
+
     switch (dateFilter) {
       case 'today':
         return { start: today, end: new Date(today.getTime() + 86400000) }
@@ -71,12 +71,15 @@ export default function DashboardPage() {
 
   const calculateStats = (transactions, accountsData, categoriesData) => {
     const { start, end } = getDateRange()
-    
-    let filtered = transactions.filter(t => {
+    console.log(transactions.resultado)
+    console.log(accountsData)
+    console.log(categoriesData)
+
+    let filtered = transactions.resultado.filter(t => {
       const transDate = new Date(t.data_transacao)
       return transDate >= start && transDate <= end
     })
-    
+
     if (selectedAccount !== 'all') {
       filtered = filtered.filter(t => t.conta === accountsData.find(a => a.id.toString() === selectedAccount)?.nome)
     }
@@ -84,7 +87,7 @@ export default function DashboardPage() {
     const totalEntradas = filtered
       .filter(t => t.valor > 0)
       .reduce((sum, t) => sum + t.valor, 0)
-    
+
     const totalSaidas = Math.abs(filtered
       .filter(t => t.valor < 0)
       .reduce((sum, t) => sum + t.valor, 0))
@@ -112,7 +115,7 @@ export default function DashboardPage() {
       totalContas: accountsData.length,
       totalCategorias: categoriesData.length
     })
-    
+
     setEntradasByCategory(entradasData)
     setSaidasByCategory(saidasData)
   }
@@ -273,7 +276,7 @@ export default function DashboardPage() {
                     ))}
                   </Pie>
                   <Tooltip formatter={(value) => formatCurrency(value)} />
-                  <Legend 
+                  <Legend
                     wrapperStyle={{ fontSize: '12px' }}
                     iconSize={10}
                   />
@@ -306,7 +309,7 @@ export default function DashboardPage() {
                     ))}
                   </Pie>
                   <Tooltip formatter={(value) => formatCurrency(value)} />
-                  <Legend 
+                  <Legend
                     wrapperStyle={{ fontSize: '12px' }}
                     iconSize={10}
                   />
