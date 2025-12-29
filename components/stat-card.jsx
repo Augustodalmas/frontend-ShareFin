@@ -1,14 +1,21 @@
-import { Card } from '@/components/ui/card'
+import { Card } from "@/components/ui/card"
 
-export function StatCard({ title, value, icon: Icon, description }) {
+export function StatCard({ title, value, icon: Icon, description, trend }) {
   return (
-    <Card className="p-4 sm:p-6">
+    <Card className="p-4 sm:p-6 hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1 sm:space-y-2 min-w-0 flex-1">
           <p className="text-xs sm:text-sm font-medium text-muted-foreground">{title}</p>
           <p className="text-2xl sm:text-3xl font-bold text-foreground truncate">{value}</p>
-          {description && (
-            <p className="text-xs sm:text-sm text-muted-foreground">{description}</p>
+          {description && <p className="text-xs sm:text-sm text-muted-foreground">{description}</p>}
+          {trend && (
+            <p
+              className={`text-xs font-medium ${
+                trend > 0 ? "text-green-600" : trend < 0 ? "text-red-600" : "text-muted-foreground"
+              }`}
+            >
+              {trend > 0 ? "↑" : trend < 0 ? "↓" : "→"} {Math.abs(trend)}%
+            </p>
           )}
         </div>
         <div className="rounded-lg bg-primary/10 p-2 sm:p-3 flex-shrink-0">

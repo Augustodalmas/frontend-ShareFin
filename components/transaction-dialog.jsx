@@ -1,45 +1,34 @@
-'use client'
+"use client"
 
-import { useState, useEffect } from 'react'
-import { categoriesAPI, accountsAPI, getUserIdFromToken } from '@/lib/api'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Plus } from 'lucide-react'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { getIconComponent, IconPicker } from '@/components/icon-picker'
+import { useState, useEffect } from "react"
+import { categoriesAPI, accountsAPI, getUserIdFromToken } from "@/lib/api"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Plus } from "lucide-react"
+import { TrendingDown, TrendingUp } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { getIconComponent, IconPicker } from "@/components/icon-picker"
 
 export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
   const [formData, setFormData] = useState({
-    name: '',
-    type: 'saida',
-    category: '',
-    account: '',
-    amount: '',
-    date: new Date().toISOString().split('T')[0],
+    amount: "",
+    type: "saida",
+    category: "",
+    account: "",
+    date: new Date().toISOString().split("T")[0],
+    name: "",
   })
 
   const [categories, setCategories] = useState([])
   const [accounts, setAccounts] = useState([])
-  const [categoryError, setCategoryError] = useState('')
-  const [accountError, setAccountError] = useState('')
+  const [categoryError, setCategoryError] = useState("")
+  const [accountError, setAccountError] = useState("")
   const [showCategoryDialog, setShowCategoryDialog] = useState(false)
   const [showAccountDialog, setShowAccountDialog] = useState(false)
-  const [newCategory, setNewCategory] = useState({ name: '', color: '#3b82f6', type: 1, icone: 'ShoppingCart' })
-  const [newAccount, setNewAccount] = useState({ name: '', currency: 'BRL', color: '#3b82f6' })
+  const [newCategory, setNewCategory] = useState({ name: "", color: "#3b82f6", type: 1, icone: "ShoppingCart" })
+  const [newAccount, setNewAccount] = useState({ name: "", currency: "BRL", color: "#3b82f6" })
 
   useEffect(() => {
     if (open) {
@@ -53,19 +42,19 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
       setFormData({
         name: transaction.name,
         type: transaction.type,
-        category: transaction.categoryId?.toString() || '',
-        account: transaction.accountId?.toString() || '',
+        category: transaction.categoryId?.toString() || "",
+        account: transaction.accountId?.toString() || "",
         amount: transaction.amount,
         date: transaction.date,
       })
     } else {
       setFormData({
-        name: '',
-        type: 'saida',
-        category: '',
-        account: '',
-        amount: '',
-        date: new Date().toISOString().split('T')[0],
+        name: "",
+        type: "saida",
+        category: "",
+        account: "",
+        amount: "",
+        date: new Date().toISOString().split("T")[0],
       })
     }
   }, [transaction, open])
@@ -75,11 +64,11 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
       const data = await categoriesAPI.getAll()
       const mapped = data.map((item) => ({
         ...item,
-        tipo: parseInt(item.tipo)
+        tipo: Number.parseInt(item.tipo),
       }))
       setCategories(mapped)
     } catch (error) {
-      console.error('Erro ao carregar categorias:', error)
+      console.error("Erro ao carregar categorias:", error)
     }
   }
 
@@ -88,15 +77,31 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
       const data = await accountsAPI.getAll()
       setAccounts(data)
     } catch (error) {
-      console.error('Erro ao carregar contas:', error)
+      console.error("Erro ao carregar contas:", error)
     }
   }
 
   const handleSubmit = (e) => {
     e.preventDefault()
+
+    if (!formData.amount || Number.parseFloat(formData.amount) <= 0) {
+      alert("Valor inválido. Por favor, insira um valor maior que zero.")
+      return
+    }
+
+    if (!formData.category) {
+      alert("Por favor, selecione uma categoria.")
+      return
+    }
+
+    if (!formData.account) {
+      alert("Por favor, selecione uma conta bancária.")
+      return
+    }
+
     const dataToSave = {
       ...formData,
-      amount: parseFloat(formData.amount) || 0
+      amount: Number.parseFloat(formData.amount) || 0,
     }
     if (transaction) {
       onSave({ ...dataToSave, id: transaction.id })
@@ -107,54 +112,53 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
   }
 
   const handleCreateCategory = async () => {
-
     if (!newCategory.name.trim()) {
-      setCategoryError('Informe o nome da categoria')
+      setCategoryError("Informe o nome da categoria")
       return
     }
 
     try {
-      setCategoryError('') // limpa erro anterior
+      setCategoryError("") // limpa erro anterior
 
       const created = await categoriesAPI.create({
         nome: newCategory.name,
         cor: newCategory.color,
         tipo: newCategory.type,
         valor_inicial: 0,
-        icone: newCategory.icone
+        icone: newCategory.icone,
       })
 
       const updatedCategories = await categoriesAPI.getAll()
       const mapped = updatedCategories.map((item) => ({
         ...item,
-        tipo: parseInt(item.tipo)
+        tipo: Number.parseInt(item.tipo),
       }))
       setCategories(mapped)
 
       const createdId = created?.id || mapped[mapped.length - 1]?.id
       if (createdId) {
-        const newType = newCategory.type === 1 ? 'saida' : 'entrada'
+        const newType = newCategory.type === 1 ? "saida" : "entrada"
         setFormData({ ...formData, category: createdId.toString(), type: newType })
       }
 
       setShowCategoryDialog(false)
-      setNewCategory({ name: '', color: '#3b82f6', type: 1, icone: 'ShoppingCart' })
+      setNewCategory({ name: "", color: "#3b82f6", type: 1, icone: "ShoppingCart" })
     } catch (error) {
-      console.error('Erro ao criar categoria:', error)
-      setCategoryError('Erro ao criar categoria. Tente novamente.')
+      console.error("Erro ao criar categoria:", error)
+      setCategoryError("Erro ao criar categoria. Tente novamente.")
     }
   }
 
   const handleCreateAccount = async () => {
     if (!newAccount.name.trim()) {
-      setAccountError('Informe o nome da conta')
+      setAccountError("Informe o nome da conta")
       return
     }
     try {
-      setAccountError('') // limpa erro anterior
+      setAccountError("") // limpa erro anterior
       const userId = getUserIdFromToken()
       if (!userId) {
-        throw new Error('User ID not found')
+        throw new Error("User ID not found")
       }
 
       const created = await accountsAPI.create({
@@ -162,7 +166,7 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
         nome: newAccount.name,
         moeda: newAccount.currency,
         cor: newAccount.color,
-        ativa: true
+        ativa: true,
       })
       const updatedAccounts = await accountsAPI.getAll()
       setAccounts(updatedAccounts)
@@ -172,53 +176,33 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
         setFormData({ ...formData, account: createdId.toString() })
       }
       setShowAccountDialog(false)
-      setNewAccount({ name: '', currency: 'BRL', color: '#3b82f6' })
+      setNewAccount({ name: "", currency: "BRL", color: "#3b82f6" })
     } catch (error) {
-      console.error('Erro ao criar conta:', error)
-      alert('Erro ao criar conta: ' + error.message)
+      console.error("Erro ao criar conta:", error)
+      alert("Erro ao criar conta: " + error.message)
     }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            {transaction ? 'Editar Transação' : 'Nova Transação'}
-          </DialogTitle>
+          <DialogTitle>{transaction ? "Editar Transação" : "Nova Transação"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
+            {/* 1. Valor (most important) */}
             <div className="space-y-2">
-              <Label htmlFor="name">Nome da Transação</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                placeholder="Ex: Compra no supermercado"
-                required
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="type">Tipo</Label>
-                <Input
-                  id="type"
-                  value={formData.type === 'entrada' ? 'Receita' : 'Despesa'}
-                  disabled
-                  className="bg-muted"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="amount">Valor</Label>
+              <Label htmlFor="amount" className="text-sm font-medium">
+                Valor <span className="text-red-500">*</span>
+              </Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">R$</span>
                 <Input
                   id="amount"
                   type="number"
                   step="0.01"
+                  min="0.01"
                   value={formData.amount}
                   onChange={(e) =>
                     setFormData({
@@ -226,21 +210,60 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
                       amount: e.target.value,
                     })
                   }
-                  placeholder="0.00"
+                  placeholder="0,00"
+                  className="pl-10"
                   required
+                  autoFocus
                 />
+              </div>
+              <p className="text-xs text-muted-foreground">Insira o valor da transação</p>
+            </div>
+
+            {/* 2. Tipo (entrada/saída) */}
+            <div className="space-y-2">
+              <Label htmlFor="type" className="text-sm font-medium">
+                Tipo <span className="text-red-500">*</span>
+              </Label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, type: "saida" })}
+                  className={`px-4 py-3 rounded-lg border-2 font-medium text-sm transition-all ${
+                    formData.type === "saida"
+                      ? "border-red-500 bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400"
+                      : "border-border bg-background text-muted-foreground hover:border-red-300"
+                  }`}
+                >
+                  <TrendingDown className="h-4 w-4 mx-auto mb-1" />
+                  Despesa
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, type: "entrada" })}
+                  className={`px-4 py-3 rounded-lg border-2 font-medium text-sm transition-all ${
+                    formData.type === "entrada"
+                      ? "border-green-500 bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-400"
+                      : "border-border bg-background text-muted-foreground hover:border-green-300"
+                  }`}
+                >
+                  <TrendingUp className="h-4 w-4 mx-auto mb-1" />
+                  Receita
+                </button>
               </div>
             </div>
 
+            {/* 3. Categoria */}
             <div className="space-y-2">
-              <Label htmlFor="category">Categoria</Label>
+              <Label htmlFor="category" className="text-sm font-medium">
+                Categoria <span className="text-red-500">*</span>
+              </Label>
               <div className="flex gap-2">
                 <Select
                   key={`category-${formData.category}`}
                   value={formData.category}
                   onValueChange={(value) => {
-                    const selectedCategory = categories.find(c => c.id.toString() === value)
-                    const newType = selectedCategory?.tipo === 1 ? 'saida' : 'entrada'
+                    const selectedCategory = categories.find((c) => c.id.toString() === value)
+                    const newType = selectedCategory?.tipo === 1 ? "saida" : "entrada"
                     setFormData({ ...formData, category: value, type: newType })
                   }}
                 >
@@ -265,40 +288,64 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
+              <p className="text-xs text-muted-foreground">Se não existir, crie uma nova categoria</p>
               {showCategoryDialog && (
                 <div className="border rounded-lg p-3 space-y-3 bg-muted/50">
-                  <Input placeholder="Nome da categoria" value={newCategory.name} onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })} />
-                  {categoryError && (
-                    <p className="text-sm text-red-500">
-                      {categoryError}
-                    </p>
-                  )}
-                  <select className="w-full px-3 py-2 rounded-md border bg-background" value={newCategory.type} onChange={(e) => setNewCategory({ ...newCategory, type: parseInt(e.target.value) })}>
+                  <Input
+                    placeholder="Nome da categoria"
+                    value={newCategory.name}
+                    onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
+                  />
+                  {categoryError && <p className="text-sm text-red-500">{categoryError}</p>}
+                  <select
+                    className="w-full px-3 py-2 rounded-md border bg-background"
+                    value={newCategory.type}
+                    onChange={(e) => setNewCategory({ ...newCategory, type: Number.parseInt(e.target.value) })}
+                  >
                     <option value={1}>Despesa</option>
                     <option value={2}>Receita</option>
                   </select>
-                  <IconPicker value={newCategory.icone} onChange={(icone) => setNewCategory({ ...newCategory, icone })} />
+                  <IconPicker
+                    value={newCategory.icone}
+                    onChange={(icone) => setNewCategory({ ...newCategory, icone })}
+                  />
                   <div>
                     <Label className="text-xs">Cor</Label>
-                    <Input type="color" value={newCategory.color} onChange={(e) => setNewCategory({ ...newCategory, color: e.target.value })} className="h-10" />
+                    <Input
+                      type="color"
+                      value={newCategory.color}
+                      onChange={(e) => setNewCategory({ ...newCategory, color: e.target.value })}
+                      className="h-10"
+                    />
                   </div>
                   <div className="flex gap-2">
-                    <Button type="button" size="sm" onClick={handleCreateCategory} className="flex-1">Criar</Button>
-                    <Button type="button" size="sm" variant="outline" onClick={() => setShowCategoryDialog(false)} className="flex-1">Cancelar</Button>
+                    <Button type="button" size="sm" onClick={handleCreateCategory} className="flex-1">
+                      Criar
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setShowCategoryDialog(false)}
+                      className="flex-1"
+                    >
+                      Cancelar
+                    </Button>
                   </div>
                 </div>
               )}
             </div>
 
+            {/* 4. Conta Bancária */}
             <div className="space-y-2">
-              <Label htmlFor="account">Conta Bancária</Label>
+              <Label htmlFor="account" className="text-sm font-medium">
+                Conta Bancária <span className="text-red-500">*</span>
+              </Label>
               <div className="flex gap-2">
                 <Select
                   key={`account-${formData.account}`}
                   value={formData.account}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, account: value })
-                  }
+                  onValueChange={(value) => setFormData({ ...formData, account: value })}
                 >
                   <SelectTrigger id="account" className="flex-1">
                     <SelectValue placeholder="Selecione a conta" />
@@ -317,44 +364,73 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
               </div>
               {showAccountDialog && (
                 <div className="border rounded-lg p-3 space-y-2 bg-muted/50">
-                  <Input placeholder="Nome da conta" value={newAccount.name} onChange={(e) => setNewAccount({ ...newAccount, name: e.target.value })} />
-                  {accountError && (
-                    <p className="text-sm text-red-500">
-                      {accountError}
-                    </p>
-                  )}
-                  <Input placeholder="Moeda (ex: BRL)" value={newAccount.currency} onChange={(e) => setNewAccount({ ...newAccount, currency: e.target.value })} />
-                  <Input type="color" value={newAccount.color} onChange={(e) => setNewAccount({ ...newAccount, color: e.target.value })} />
+                  <Input
+                    placeholder="Nome da conta"
+                    value={newAccount.name}
+                    onChange={(e) => setNewAccount({ ...newAccount, name: e.target.value })}
+                  />
+                  {accountError && <p className="text-sm text-red-500">{accountError}</p>}
+                  <Input
+                    placeholder="Moeda (ex: BRL)"
+                    value={newAccount.currency}
+                    onChange={(e) => setNewAccount({ ...newAccount, currency: e.target.value })}
+                  />
+                  <Input
+                    type="color"
+                    value={newAccount.color}
+                    onChange={(e) => setNewAccount({ ...newAccount, color: e.target.value })}
+                  />
                   <div className="flex gap-2">
-                    <Button type="button" size="sm" onClick={handleCreateAccount} className="flex-1">Criar</Button>
-                    <Button type="button" size="sm" variant="outline" onClick={() => setShowAccountDialog(false)} className="flex-1">Cancelar</Button>
+                    <Button type="button" size="sm" onClick={handleCreateAccount} className="flex-1">
+                      Criar
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setShowAccountDialog(false)}
+                      className="flex-1"
+                    >
+                      Cancelar
+                    </Button>
                   </div>
                 </div>
               )}
             </div>
 
+            {/* 5. Data (prefilled with today) */}
             <div className="space-y-2">
-              <Label htmlFor="date">Data</Label>
+              <Label htmlFor="date" className="text-sm font-medium">
+                Data <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="date"
                 type="date"
                 value={formData.date}
-                onChange={(e) =>
-                  setFormData({ ...formData, date: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                max={new Date().toISOString().split("T")[0]}
                 required
               />
             </div>
+
+            {/* 6. Descrição (optional, last) */}
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-sm font-medium">
+                Descrição <span className="text-muted-foreground text-xs">(opcional)</span>
+              </Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="Ex: Compra no supermercado"
+              />
+            </div>
           </div>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
+          <DialogFooter className="gap-2">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit">Salvar</Button>
+            <Button type="submit">{transaction ? "Atualizar" : "Salvar"}</Button>
           </DialogFooter>
         </form>
       </DialogContent>
