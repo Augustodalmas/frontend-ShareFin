@@ -132,23 +132,21 @@ export default function CategoriesPage() {
           <div className="inline-flex rounded-lg border border-border bg-card p-1">
             <button
               onClick={() => setTypeFilter('2')}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                typeFilter === '2'
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${typeFilter === '2'
                   ? 'bg-primary text-primary-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
-              }`}
+                }`}
             >
-              Despesas
+              Receitas
             </button>
             <button
               onClick={() => setTypeFilter('1')}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                typeFilter === '1'
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${typeFilter === '1'
                   ? 'bg-primary text-primary-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
-              }`}
+                }`}
             >
-              Receitas
+              Despesas
             </button>
           </div>
         </div>
