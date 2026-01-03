@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/page-header"
 import { DataTable } from "@/components/data-table"
 import { TransactionDialog } from "@/components/transaction-dialog"
 import { FeedbackWidget } from "@/components/feedback-widget"
+import { MobileFilters } from "@/components/mobile-filters"
 import { Button } from "@/components/ui/button"
 import { Plus, TrendingUp, TrendingDown } from "lucide-react"
 import { transactionsAPI, getUserIdFromToken, categoriesAPI, accountsAPI } from "@/lib/api"
@@ -303,27 +304,110 @@ export default function TransactionsPage() {
     <div className="flex min-h-screen overflow-x-hidden">
       <Sidebar />
       <FeedbackWidget />
-      <Button
-        onClick={handleAdd}
-        className="fixed bottom-6 right-6 lg:hidden h-14 w-14 rounded-full shadow-lg z-30"
-        size="icon"
-        aria-label="Adicionar transação"
-      >
-        <Plus className="h-6 w-6" />
-      </Button>
       <main className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-8 pt-20 lg:pt-8 max-w-full overflow-x-hidden">
         <PageHeader
           title="Transações"
           description="Gerencie todas as suas transações financeiras"
-          action={
-            <Button onClick={handleAdd} className="hidden lg:flex" size="lg">
-              <Plus className="mr-2 h-5 w-5" />
-              Nova Transação
-            </Button>
-          }
         />
 
-        <div className="mb-6 space-y-4">
+        <MobileFilters hasActiveFilters={hasActiveFilters} onClearFilters={clearFilters}>
+          <div className="flex items-center gap-3 mb-3">
+            <span className="text-sm font-medium text-muted-foreground">Tipo:</span>
+            <div className="inline-flex rounded-lg border border-border bg-card p-1 flex-1">
+              <button
+                onClick={() => setFilters({ ...filters, tipo: 'all' })}
+                className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                  filters.tipo === 'all'
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Todas
+              </button>
+              <button
+                onClick={() => setFilters({ ...filters, tipo: 'saida' })}
+                className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                  filters.tipo === 'saida'
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Despesas
+              </button>
+              <button
+                onClick={() => setFilters({ ...filters, tipo: 'entrada' })}
+                className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                  filters.tipo === 'entrada'
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Receitas
+              </button>
+            </div>
+          </div>
+
+          <input
+            type="date"
+            value={filters.data_transacao_low}
+            onChange={(e) => setFilters({ ...filters, data_transacao_low: e.target.value })}
+            className="w-full px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            placeholder="Data inicial"
+          />
+
+          <input
+            type="date"
+            value={filters.data_transacao_high}
+            onChange={(e) => setFilters({ ...filters, data_transacao_high: e.target.value })}
+            max={new Date().toISOString().split('T')[0]}
+            className="w-full px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            placeholder="Data final"
+          />
+
+          <select
+            value={filters.conta}
+            onChange={(e) => setFilters({ ...filters, conta: e.target.value })}
+            className="w-full px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="">Todas as contas</option>
+            {accounts.map((account) => (
+              <option key={account.id} value={account.nome}>
+                {account.nome}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={filters.categoria}
+            onChange={(e) => setFilters({ ...filters, categoria: e.target.value })}
+            className="w-full px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="">Todas as categorias</option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.nome}>
+                {category.nome}
+              </option>
+            ))}
+          </select>
+
+          <input
+            type="text"
+            placeholder="Filtrar por usuário..."
+            value={filters.usuario}
+            onChange={(e) => setFilters({ ...filters, usuario: e.target.value })}
+            className="w-full px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+
+          <input
+            type="text"
+            placeholder="Filtrar por descrição..."
+            value={filters.obs}
+            onChange={(e) => setFilters({ ...filters, obs: e.target.value })}
+            className="w-full px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </MobileFilters>
+
+        <div className="hidden lg:block mb-6 space-y-4">
           <div className="flex items-center gap-3">
             <span className="text-sm font-medium text-muted-foreground">Tipo:</span>
             <div className="inline-flex rounded-lg border border-border bg-card p-1">
@@ -431,7 +515,7 @@ export default function TransactionsPage() {
           )}
         </div>
 
-        <DataTable data={transactions} columns={columns} onEdit={handleEdit} onDelete={handleDelete} />
+        <DataTable data={transactions} columns={columns} onEdit={handleEdit} onDelete={handleDelete} onAdd={handleAdd} addButtonText="Nova Transação" />
 
         <TransactionDialog
           open={dialogOpen}

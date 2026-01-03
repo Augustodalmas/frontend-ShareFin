@@ -6,6 +6,7 @@ import { PageHeader } from '@/components/page-header'
 import { DataTable } from '@/components/data-table'
 import { CategoryDialog } from '@/components/category-dialog'
 import { FeedbackWidget } from '@/components/feedback-widget'
+import { MobileFilters } from '@/components/mobile-filters'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import { categoriesAPI } from '@/lib/api'
@@ -119,35 +120,57 @@ export default function CategoriesPage() {
         <PageHeader
           title="Categorias"
           description="Organize suas transações por categorias"
-          action={
-            <Button onClick={handleAdd}>
-              <Plus className="mr-2 h-4 w-4" />
-              Nova Categoria
-            </Button>
-          }
         />
 
-        <div className="mb-6 flex items-center gap-3">
-          <span className="text-sm font-medium text-muted-foreground">Tipo:</span>
-          <div className="inline-flex rounded-lg border border-border bg-card p-1">
-            <button
-              onClick={() => setTypeFilter('2')}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${typeFilter === '2'
-                  ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-                }`}
-            >
-              Receitas
-            </button>
-            <button
-              onClick={() => setTypeFilter('1')}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${typeFilter === '1'
-                  ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-                }`}
-            >
-              Despesas
-            </button>
+        <MobileFilters>
+          <div className="flex items-center gap-3 mb-3">
+            <span className="text-sm font-medium text-muted-foreground">Tipo:</span>
+            <div className="inline-flex rounded-lg border border-border bg-card p-1 flex-1">
+              <button
+                onClick={() => setTypeFilter('2')}
+                className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${typeFilter === '2'
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                  }`}
+              >
+                Receitas
+              </button>
+              <button
+                onClick={() => setTypeFilter('1')}
+                className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${typeFilter === '1'
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                  }`}
+              >
+                Despesas
+              </button>
+            </div>
+          </div>
+        </MobileFilters>
+
+        <div className="hidden lg:block mb-6">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-muted-foreground">Tipo:</span>
+            <div className="inline-flex rounded-lg border border-border bg-card p-1">
+              <button
+                onClick={() => setTypeFilter('2')}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${typeFilter === '2'
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                  }`}
+              >
+                Receitas
+              </button>
+              <button
+                onClick={() => setTypeFilter('1')}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${typeFilter === '1'
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                  }`}
+              >
+                Despesas
+              </button>
+            </div>
           </div>
         </div>
 
@@ -156,6 +179,8 @@ export default function CategoriesPage() {
           columns={columns}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onAdd={handleAdd}
+          addButtonText="Nova Categoria"
         />
 
         <CategoryDialog

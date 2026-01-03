@@ -6,6 +6,7 @@ import { PageHeader } from '@/components/page-header'
 import { DataTable } from '@/components/data-table'
 import { AccountDialog } from '@/components/account-dialog'
 import { FeedbackWidget } from '@/components/feedback-widget'
+import { MobileFilters } from '@/components/mobile-filters'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import { accountsAPI, getUserIdFromToken } from '@/lib/api'
@@ -181,15 +182,44 @@ export default function AccountsPage() {
         <PageHeader
           title="Contas Bancárias"
           description="Gerencie suas contas bancárias"
-          action={
-            <Button onClick={handleAdd}>
-              <Plus className="mr-2 h-4 w-4" />
-              Adicionar Conta
-            </Button>
-          }
         />
 
-        <div className="mb-6 space-y-3">
+        <MobileFilters hasActiveFilters={hasActiveFilters} onClearFilters={clearFilters}>
+          <input
+            type="text"
+            placeholder="Filtrar por nome..."
+            value={filters.nome}
+            onChange={(e) => setFilters({ ...filters, nome: e.target.value })}
+            className="w-full px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+          <input
+            type="text"
+            placeholder="Filtrar por moeda..."
+            value={filters.moeda}
+            onChange={(e) => setFilters({ ...filters, moeda: e.target.value })}
+            className="w-full px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+          <select
+            value={filters.ativa}
+            onChange={(e) => setFilters({ ...filters, ativa: e.target.value })}
+            className="w-full px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="">Todas (Ativa/Inativa)</option>
+            <option value="true">Ativa</option>
+            <option value="false">Inativa</option>
+          </select>
+          <select
+            value={filters.share}
+            onChange={(e) => setFilters({ ...filters, share: e.target.value })}
+            className="w-full px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="">Todas (Compartilhamento)</option>
+            <option value="true">Compartilhadas</option>
+            <option value="false">Não compartilhadas</option>
+          </select>
+        </MobileFilters>
+
+        <div className="hidden lg:block mb-6 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <input
               type="text"
@@ -237,6 +267,8 @@ export default function AccountsPage() {
           columns={columns}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onAdd={handleAdd}
+          addButtonText="Adicionar Conta"
         />
 
         <AccountDialog

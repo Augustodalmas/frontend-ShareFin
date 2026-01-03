@@ -2,9 +2,9 @@
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { Pencil, Trash2, FileX } from "lucide-react"
+import { Pencil, Trash2, FileX, Plus } from "lucide-react"
 
-export function DataTable({ data, columns, onEdit, onDelete }) {
+export function DataTable({ data, columns, onEdit, onDelete, onAdd, addButtonText = "Adicionar" }) {
   return (
     <div className="rounded-lg border border-border bg-card overflow-hidden w-full shadow-sm">
       <div className="w-full overflow-x-auto">
@@ -20,6 +20,20 @@ export function DataTable({ data, columns, onEdit, onDelete }) {
             </TableRow>
           </TableHeader>
           <TableBody>
+            {onAdd && (
+              <TableRow className="hover:bg-green-50 dark:hover:bg-green-950/20 transition-colors border-b-2 border-green-200 dark:border-green-900/30 bg-green-50/50 dark:bg-green-950/10">
+                <TableCell colSpan={columns.length + (onEdit || onDelete ? 1 : 0)} className="py-3">
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-green-700 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 hover:bg-green-100 dark:hover:bg-green-950/30 font-medium"
+                    onClick={onAdd}
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    {addButtonText}
+                  </Button>
+                </TableCell>
+              </TableRow>
+            )}
             {data.length === 0 ? (
               <TableRow className="hover:bg-transparent">
                 <TableCell colSpan={columns.length + (onEdit || onDelete ? 1 : 0)} className="h-32 text-center">
