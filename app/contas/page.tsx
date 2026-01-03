@@ -22,14 +22,34 @@ interface BankAccount {
 
 export default function AccountsPage() {
   const [accounts, setAccounts] = useState<BankAccount[]>([])
+  const [filters, setFilters] = useState({
+    nome: '',
+    moeda: '',
+    ativa: '',
+    share: '',
+  })
+
+  useEffect(() => {
+    const savedFilters = localStorage.getItem('accountFilters')
+    if (savedFilters) {
+      setFilters(JSON.parse(savedFilters))
+    }
+  }, [])
 
   useEffect(() => {
     loadAccounts()
-  }, [])
+    localStorage.setItem('accountFilters', JSON.stringify(filters))
+  }, [filters])
 
   const loadAccounts = async () => {
     try {
-      const data = await accountsAPI.getAll()
+      const params: any = {}
+      if (filters.nome) params.nome = filters.nome
+      if (filters.moeda) params.moeda = filters.moeda
+      if (filters.ativa) params.ativa = filters.ativa
+      if (filters.share) params.share = filters.share
+      
+      const data = await accountsAPI.getAll(Object.keys(params).length > 0 ? params : undefined)
       const mapped = data.map((item: any) => ({
         id: item.id,
         name: item.nome,
@@ -105,6 +125,12 @@ export default function AccountsPage() {
     setDialogOpen(true)
   }
 
+  const clearFilters = () => {
+    setFilters({ nome: '', moeda: '', ativa: '', share: '' })
+  }
+
+  const hasActiveFilters = filters.nome || filters.moeda || filters.ativa || filters.share
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -162,6 +188,49 @@ export default function AccountsPage() {
             </Button>
           }
         />
+
+        <div className="mb-6 space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <input
+              type="text"
+              placeholder="Filtrar por nome..."
+              value={filters.nome}
+              onChange={(e) => setFilters({ ...filters, nome: e.target.value })}
+              className="px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            <input
+              type="text"
+              placeholder="Filtrar por moeda..."
+              value={filters.moeda}
+              onChange={(e) => setFilters({ ...filters, moeda: e.target.value })}
+              className="px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            <select
+              value={filters.ativa}
+              onChange={(e) => setFilters({ ...filters, ativa: e.target.value })}
+              className="px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="">Todas (Ativa/Inativa)</option>
+              <option value="true">Ativa</option>
+              <option value="false">Inativa</option>
+            </select>
+            <select
+              value={filters.share}
+              onChange={(e) => setFilters({ ...filters, share: e.target.value })}
+              className="px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="">Todas (Compartilhamento)</option>
+              <option value="true">Compartilhadas</option>
+              <option value="false">Não compartilhadas</option>
+            </select>
+          </div>
+
+          {hasActiveFilters && (
+            <Button variant="outline" size="sm" onClick={clearFilters}>
+              Limpar filtros
+            </Button>
+          )}
+        </div>
 
         <DataTable
           data={accounts}

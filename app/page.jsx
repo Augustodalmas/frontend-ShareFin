@@ -25,7 +25,7 @@ export default function DashboardPage() {
   const [allTransactions, setAllTransactions] = useState([])
   const [accounts, setAccounts] = useState([])
   const [selectedAccount, setSelectedAccount] = useState("all")
-  const [dateFilter, setDateFilter] = useState("month")
+  const [dateFilter, setDateFilter] = useState("all")
   const [loading, setLoading] = useState(true)
   const router = useRouter()
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -42,9 +42,10 @@ export default function DashboardPage() {
         categoriesAPI.getAll(),
       ])
 
-      setAllTransactions(transactions)
+      const transactionsList = Array.isArray(transactions) ? transactions : (transactions.result || [])
+      setAllTransactions(transactionsList)
       setAccounts(accountsData)
-      calculateStats(transactions, accountsData, categories)
+      calculateStats(transactionsList, accountsData, categories)
     } catch (error) {
       console.error("Erro ao carregar dashboard:", error)
     } finally {
@@ -77,11 +78,8 @@ export default function DashboardPage() {
 
   const calculateStats = (transactions, accountsData, categoriesData) => {
     const { start, end } = getDateRange()
-    console.log(transactions.resultado)
-    console.log(accountsData)
-    console.log(categoriesData)
 
-    let filtered = transactions.resultado.filter((t) => {
+    let filtered = transactions.filter((t) => {
       const transDate = new Date(t.data_transacao)
       return transDate >= start && transDate <= end
     })
@@ -166,8 +164,14 @@ export default function DashboardPage() {
   }
 
   const getUserIdFromToken = () => {
-    // Placeholder for token parsing logic
-    return "user123"
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+    if (!token) return null
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      return payload.id
+    } catch {
+      return null
+    }
   }
 
   if (loading) {

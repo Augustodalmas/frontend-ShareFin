@@ -7,7 +7,7 @@ import { DataTable } from "@/components/data-table"
 import { TransactionDialog } from "@/components/transaction-dialog"
 import { FeedbackWidget } from "@/components/feedback-widget"
 import { Button } from "@/components/ui/button"
-import { Plus, TrendingUp, TrendingDown, X } from "lucide-react"
+import { Plus, TrendingUp, TrendingDown } from "lucide-react"
 import { transactionsAPI, getUserIdFromToken, categoriesAPI, accountsAPI } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
 
@@ -25,27 +25,78 @@ interface Transaction {
 
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([])
-  const [selectedAccount, setSelectedAccount] = useState<string>("all")
   const [accounts, setAccounts] = useState<any[]>([])
+  const [categories, setCategories] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingTransaction, setEditingTransaction] = useState<Transaction | undefined>()
+  const [filters, setFilters] = useState({
+    conta: '',
+    categoria: '',
+    usuario: '',
+    obs: '',
+    tipo: 'all',
+    data_transacao_low: '',
+    data_transacao_high: new Date().toISOString().split('T')[0],
+  })
   const { toast } = useToast()
 
   useEffect(() => {
-    loadTransactions()
+    const savedFilters = localStorage.getItem('transactionFilters')
+    if (savedFilters) {
+      setFilters(JSON.parse(savedFilters))
+    } else {
+      const defaultFilters = {
+        conta: '',
+        categoria: '',
+        usuario: '',
+        obs: '',
+        tipo: 'all',
+        data_transacao_low: '',
+        data_transacao_high: new Date().toISOString().split('T')[0],
+      }
+      setFilters(defaultFilters)
+    }
+    loadInitialData()
   }, [])
+
+  useEffect(() => {
+    if (accounts.length > 0 && categories.length > 0) {
+      loadTransactions()
+      localStorage.setItem('transactionFilters', JSON.stringify(filters))
+    }
+  }, [filters, accounts, categories])
+
+  const loadInitialData = async () => {
+    try {
+      const [accountsData, categoriesData] = await Promise.all([
+        accountsAPI.getAll(),
+        categoriesAPI.getAll(),
+      ])
+      setAccounts(accountsData)
+      setCategories(categoriesData)
+      setLoading(false)
+    } catch (error) {
+      console.error('Erro ao carregar dados iniciais:', error)
+      setLoading(false)
+    }
+  }
 
   const loadTransactions = async () => {
     try {
-      const [data, categories, accounts] = await Promise.all([
-        transactionsAPI.getAll(),
-        categoriesAPI.getAll(),
-        accountsAPI.getAll(),
-      ])
+      const params: any = {}
+      if (filters.conta) params.conta = filters.conta
+      if (filters.categoria) params.categoria = filters.categoria
+      if (filters.usuario) params.usuario = filters.usuario
+      if (filters.obs) params.obs = filters.obs
+      if (filters.data_transacao_low) params.data_transacao_low = filters.data_transacao_low
+      if (filters.data_transacao_high) params.data_transacao_high = filters.data_transacao_high
 
-      const mapped = data.resultado.map((item: any) => {
+      const data = await transactionsAPI.getAll(Object.keys(params).length > 0 ? params : undefined)
+
+      let transactionsList = Array.isArray(data) ? data : (data.resultado || [])
+
+      const mapped = transactionsList.map((item: any) => {
         const category = categories.find((c: any) => c.nome === item.categoria)
         const account = accounts.find((a: any) => a.nome === item.conta)
 
@@ -61,9 +112,12 @@ export default function TransactionsPage() {
           date: item.data_transacao.split("T")[0],
         }
       })
-      setTransactions(mapped)
-      setFilteredTransactions(mapped)
-      setAccounts(accounts)
+
+      const filtered = filters.tipo === 'all' 
+        ? mapped 
+        : mapped.filter((t: Transaction) => t.type === filters.tipo)
+
+      setTransactions(filtered)
     } catch (error) {
       console.error("Erro ao carregar transações:", error)
       toast({
@@ -71,18 +125,8 @@ export default function TransactionsPage() {
         description: "Não foi possível carregar as transações. Tente novamente.",
         variant: "destructive",
       })
-    } finally {
-      setLoading(false)
     }
   }
-
-  useEffect(() => {
-    if (selectedAccount === "all") {
-      setFilteredTransactions(transactions)
-    } else {
-      setFilteredTransactions(transactions.filter((t) => t.accountId.toString() === selectedAccount))
-    }
-  }, [selectedAccount, transactions])
 
   const handleSave = async (transactionData: any) => {
     try {
@@ -168,8 +212,18 @@ export default function TransactionsPage() {
   }
 
   const clearFilters = () => {
-    setSelectedAccount("all")
+    setFilters({
+      conta: '',
+      categoria: '',
+      usuario: '',
+      obs: '',
+      tipo: 'all',
+      data_transacao_low: '',
+      data_transacao_high: new Date().toISOString().split('T')[0],
+    })
   }
+
+  const hasActiveFilters = filters.conta || filters.categoria || filters.usuario || filters.obs || filters.tipo !== 'all'
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -269,46 +323,115 @@ export default function TransactionsPage() {
           }
         />
 
-        <div className="mb-6 space-y-3">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="flex-1 sm:max-w-xs">
-              <label htmlFor="account-filter" className="sr-only">
-                Filtrar por conta
-              </label>
-              <select
-                id="account-filter"
-                value={selectedAccount}
-                onChange={(e) => setSelectedAccount(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
+        <div className="mb-6 space-y-4">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-muted-foreground">Tipo:</span>
+            <div className="inline-flex rounded-lg border border-border bg-card p-1">
+              <button
+                onClick={() => setFilters({ ...filters, tipo: 'all' })}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  filters.tipo === 'all'
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
               >
-                <option value="all">Todas as contas</option>
-                {accounts.map((account) => (
-                  <option key={account.id} value={account.id.toString()}>
-                    {account.nome}
-                  </option>
-                ))}
-              </select>
+                Todas
+              </button>
+              <button
+                onClick={() => setFilters({ ...filters, tipo: 'saida' })}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  filters.tipo === 'saida'
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Despesas
+              </button>
+              <button
+                onClick={() => setFilters({ ...filters, tipo: 'entrada' })}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  filters.tipo === 'entrada'
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Receitas
+              </button>
             </div>
           </div>
 
-          {selectedAccount !== "all" && (
-            <div className="flex flex-wrap gap-2 items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <input
+              type="date"
+              value={filters.data_transacao_low}
+              onChange={(e) => setFilters({ ...filters, data_transacao_low: e.target.value })}
+              className="px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Data inicial"
+            />
+
+            <input
+              type="date"
+              value={filters.data_transacao_high}
+              onChange={(e) => setFilters({ ...filters, data_transacao_high: e.target.value })}
+              max={new Date().toISOString().split('T')[0]}
+              className="px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Data final"
+            />
+
+            <select
+              value={filters.conta}
+              onChange={(e) => setFilters({ ...filters, conta: e.target.value })}
+              className="px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="">Todas as contas</option>
+              {accounts.map((account) => (
+                <option key={account.id} value={account.nome}>
+                  {account.nome}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={filters.categoria}
+              onChange={(e) => setFilters({ ...filters, categoria: e.target.value })}
+              className="px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="">Todas as categorias</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.nome}>
+                  {category.nome}
+                </option>
+              ))}
+            </select>
+
+            <input
+              type="text"
+              placeholder="Filtrar por usuário..."
+              value={filters.usuario}
+              onChange={(e) => setFilters({ ...filters, usuario: e.target.value })}
+              className="px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+
+            <input
+              type="text"
+              placeholder="Filtrar por descrição..."
+              value={filters.obs}
+              onChange={(e) => setFilters({ ...filters, obs: e.target.value })}
+              className="px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+
+          {hasActiveFilters && (
+            <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground">Filtros ativos:</span>
-              <button
-                onClick={clearFilters}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
-              >
-                <span>{accounts.find((a) => a.id.toString() === selectedAccount)?.nome}</span>
-                <X className="h-3 w-3" />
-              </button>
-              <Button variant="ghost" size="sm" onClick={clearFilters} className="h-7 text-xs">
-                Limpar filtros
+              <Button variant="outline" size="sm" onClick={clearFilters}>
+                Limpar todos os filtros
               </Button>
             </div>
           )}
         </div>
 
-        <DataTable data={filteredTransactions} columns={columns} onEdit={handleEdit} onDelete={handleDelete} />
+        <DataTable data={transactions} columns={columns} onEdit={handleEdit} onDelete={handleDelete} />
 
         <TransactionDialog
           open={dialogOpen}

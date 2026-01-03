@@ -21,14 +21,15 @@ interface Category {
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([])
+  const [typeFilter, setTypeFilter] = useState<'1' | '2'>('2')
 
   useEffect(() => {
     loadCategories()
-  }, [])
+  }, [typeFilter])
 
   const loadCategories = async () => {
     try {
-      const data = await categoriesAPI.getAll()
+      const data = await categoriesAPI.getAll({ tipo: typeFilter })
       const mapped = data.map((item: any) => ({
         id: item.id,
         name: item.nome,
@@ -125,6 +126,32 @@ export default function CategoriesPage() {
             </Button>
           }
         />
+
+        <div className="mb-6 flex items-center gap-3">
+          <span className="text-sm font-medium text-muted-foreground">Tipo:</span>
+          <div className="inline-flex rounded-lg border border-border bg-card p-1">
+            <button
+              onClick={() => setTypeFilter('2')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                typeFilter === '2'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Despesas
+            </button>
+            <button
+              onClick={() => setTypeFilter('1')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                typeFilter === '1'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Receitas
+            </button>
+          </div>
+        </div>
 
         <DataTable
           data={categories}

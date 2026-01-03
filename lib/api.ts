@@ -8,7 +8,7 @@ function getToken() {
 function getUserIdFromToken() {
   const token = getToken()
   if (!token) return null
-  
+
   try {
     const payload = JSON.parse(atob(token.split('.')[1]))
     return payload.id
@@ -20,7 +20,7 @@ function getUserIdFromToken() {
 function isAdmin() {
   const token = getToken()
   if (!token) return false
-  
+
   try {
     const payload = JSON.parse(atob(token.split('.')[1]))
     return payload.is_admin === true
@@ -34,7 +34,7 @@ export { getUserIdFromToken, isAdmin }
 async function fetchAPI(endpoint: string, options?: RequestInit) {
   const url = `${API_BASE_URL}${endpoint}`
   const token = getToken()
-  
+
   try {
     const response = await fetch(url, {
       ...options,
@@ -67,7 +67,17 @@ async function fetchAPI(endpoint: string, options?: RequestInit) {
 
 // Transações
 export const transactionsAPI = {
-  getAll: () => fetchAPI('/transactions'),
+  getAll: (params?: { conta?: string; categoria?: string; usuario?: string; obs?: string; data_transacao_low?: string; data_transacao_high?: string }) => {
+    const queryParams = new URLSearchParams()
+    if (params?.conta) queryParams.append('conta', params.conta)
+    if (params?.categoria) queryParams.append('categoria', params.categoria)
+    if (params?.usuario) queryParams.append('usuario', params.usuario)
+    if (params?.obs) queryParams.append('obs', params.obs)
+    if (params?.data_transacao_low) queryParams.append('data_transacao_low', params.data_transacao_low)
+    if (params?.data_transacao_high) queryParams.append('data_transacao_high', params.data_transacao_high)
+    const query = queryParams.toString()
+    return fetchAPI(`/transactions${query ? `?${query}` : ''}`)
+  },
   getShared: () => fetchAPI('/transactions/share'),
   create: (data: any) => fetchAPI('/transactions', { method: 'POST', body: JSON.stringify(data) }),
   update: (id: number, data: any) => fetchAPI(`/transactions/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
@@ -76,7 +86,13 @@ export const transactionsAPI = {
 
 // Categorias
 export const categoriesAPI = {
-  getAll: () => fetchAPI('/category'),
+  getAll: (params?: { nome?: string; tipo?: string }) => {
+    const queryParams = new URLSearchParams()
+    if (params?.nome) queryParams.append('nome', params.nome)
+    if (params?.tipo) queryParams.append('tipo', params.tipo)
+    const query = queryParams.toString()
+    return fetchAPI(`/category${query ? `?${query}` : ''}`)
+  },
   create: (data: any) => fetchAPI('/category', { method: 'POST', body: JSON.stringify(data) }),
   update: (id: number, data: any) => fetchAPI(`/category/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   delete: (id: number) => fetchAPI(`/category/${id}`, { method: 'DELETE' }),
@@ -84,7 +100,15 @@ export const categoriesAPI = {
 
 // Contas
 export const accountsAPI = {
-  getAll: () => fetchAPI('/account'),
+  getAll: (params?: { nome?: string; moeda?: string; ativa?: string; share?: string }) => {
+    const queryParams = new URLSearchParams()
+    if (params?.nome) queryParams.append('nome', params.nome)
+    if (params?.moeda) queryParams.append('moeda', params.moeda)
+    if (params?.ativa) queryParams.append('ativa', params.ativa)
+    if (params?.share) queryParams.append('share', params.share)
+    const query = queryParams.toString()
+    return fetchAPI(`/account${query ? `?${query}` : ''}`)
+  },
   create: (data: any) => fetchAPI('/account', { method: 'POST', body: JSON.stringify(data) }),
   update: (id: number, data: any) => fetchAPI(`/account/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   delete: (id: number) => fetchAPI(`/account/${id}`, { method: 'DELETE' }),
@@ -112,22 +136,22 @@ export const authAPI = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, senha }),
     })
-    
+
     if (!response.ok) {
       throw new Error('Credenciais inválidas')
     }
-    
+
     const data = await response.json()
     const token = data.token || data.result?.token
-    
+
     if (token) {
       localStorage.setItem('token', token)
       document.cookie = `auth-token=${token}; path=/; max-age=86400`
     }
-    
+
     return data
   },
-  
+
   logout: () => {
     localStorage.removeItem('token')
     document.cookie = 'auth-token=; path=/; max-age=0'
