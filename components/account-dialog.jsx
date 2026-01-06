@@ -146,18 +146,6 @@ export function AccountDialog({ open, onOpenChange, account, onSave }) {
             <div className="flex items-center space-x-3">
               <input
                 type="checkbox"
-                id="active"
-                checked={formData.active}
-                onChange={(e) =>
-                  setFormData({ ...formData, active: e.target.checked })
-                }
-                className="w-5 h-5 rounded cursor-pointer"
-              />
-              <Label htmlFor="active" className="cursor-pointer text-sm sm:text-base">Conta ativa</Label>
-            </div>
-            <div className="flex items-center space-x-3">
-              <input
-                type="checkbox"
                 id="share"
                 checked={formData.share}
                 onChange={(e) => {

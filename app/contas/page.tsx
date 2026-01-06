@@ -10,6 +10,7 @@ import { MobileFilters } from '@/components/mobile-filters'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import { accountsAPI, getUserIdFromToken } from '@/lib/api'
+import { useToast } from '@/hooks/use-toast'
 
 interface BankAccount {
   id: number
@@ -23,6 +24,7 @@ interface BankAccount {
 
 export default function AccountsPage() {
   const [accounts, setAccounts] = useState<BankAccount[]>([])
+  const { toast } = useToast()
   const [filters, setFilters] = useState({
     nome: '',
     moeda: '',
@@ -89,19 +91,31 @@ export default function AccountsPage() {
       if ('id' in accountData) {
         const { user, ...updatePayload } = payload
         await accountsAPI.update(accountData.id, updatePayload)
+        toast({
+          title: "Conta atualizada",
+          description: "A conta foi atualizada com sucesso.",
+        })
       } else {
         if (!userId) {
           throw new Error('User ID not found in token. Please login again.')
         }
 
         await accountsAPI.create(payload)
+        toast({
+          title: "Conta criada",
+          description: "A conta foi criada com sucesso.",
+        })
       }
       await loadAccounts()
       setEditingAccount(undefined)
       setDialogOpen(false)
     } catch (error) {
       console.error('Erro ao salvar conta:', error)
-      alert(`Erro ao salvar conta: ${error.message}`)
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar a conta. Tente novamente.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -114,9 +128,18 @@ export default function AccountsPage() {
     if (confirm('Tem certeza que deseja excluir esta conta?')) {
       try {
         await accountsAPI.delete(account.id)
+        toast({
+          title: "Conta excluída",
+          description: "A conta foi excluída com sucesso.",
+        })
         await loadAccounts()
       } catch (error) {
         console.error('Erro ao excluir conta:', error)
+        toast({
+          title: "Erro ao excluir",
+          description: "Não foi possível excluir a conta. Tente novamente.",
+          variant: "destructive",
+        })
       }
     }
   }
@@ -142,27 +165,6 @@ export default function AccountsPage() {
   const columns = [
     { header: 'Nome da Conta', accessor: 'name' as const, className: 'text-sm sm:text-base' },
     { header: 'Moeda', accessor: 'currency' as const, className: 'text-sm hidden sm:table-cell' },
-    {
-      header: 'Cor',
-      accessor: (row: BankAccount) => (
-        <div className="flex items-center gap-2">
-          <div
-            className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border flex-shrink-0"
-            style={{ backgroundColor: row.color }}
-          />
-          <span className="text-xs sm:text-sm hidden md:inline">{row.color}</span>
-        </div>
-      ),
-    },
-    {
-      header: 'Status',
-      accessor: (row: BankAccount) => (
-        <span className={`text-xs sm:text-sm ${row.active ? 'text-green-600' : 'text-red-600'
-          }`}>
-          {row.active ? 'Ativa' : 'Inativa'}
-        </span>
-      ),
-    },
     {
       header: 'Compartilhamento',
       accessor: (row: BankAccount) => (

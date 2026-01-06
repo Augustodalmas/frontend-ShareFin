@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { usersAPI, accountsAPI, transactionsAPI, getUserIdFromToken } from '@/lib/api'
 import { User, Wallet, Lock, Copy, Check } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
 
 export default function ProfilePage() {
   const [user, setUser] = useState<any>(null)
@@ -20,6 +21,7 @@ export default function ProfilePage() {
   const [passwordData, setPasswordData] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' })
   const [loading, setLoading] = useState(false)
   const [copiedCode, setCopiedCode] = useState(false)
+  const { toast } = useToast()
 
   useEffect(() => {
     loadUserData()
@@ -44,6 +46,10 @@ export default function ProfilePage() {
     if (user?.shareCode) {
       navigator.clipboard.writeText(user.shareCode)
       setCopiedCode(true)
+      toast({
+        title: "Código copiado",
+        description: "O código de compartilhamento foi copiado para a área de transferência.",
+      })
       setTimeout(() => setCopiedCode(false), 2000)
     }
   }
@@ -70,10 +76,17 @@ export default function ProfilePage() {
       await usersAPI.update(user.id, payload)
       await loadUserData()
       setEditMode(false)
-      alert('Perfil atualizado com sucesso!')
+      toast({
+        title: "Perfil atualizado",
+        description: "Suas informações foram atualizadas com sucesso.",
+      })
     } catch (error) {
       console.error('Erro ao atualizar perfil:', error)
-      alert('Erro ao atualizar perfil')
+      toast({
+        title: "Erro ao atualizar",
+        description: "Não foi possível atualizar o perfil. Tente novamente.",
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }
@@ -81,7 +94,11 @@ export default function ProfilePage() {
 
   const handleChangePassword = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      alert('As senhas não coincidem')
+      toast({
+        title: "Senhas não coincidem",
+        description: "A nova senha e a confirmação devem ser iguais.",
+        variant: "destructive",
+      })
       return
     }
     if (!user) return
@@ -94,10 +111,17 @@ export default function ProfilePage() {
       await usersAPI.update(user.id, payload)
       setChangePassword(false)
       setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' })
-      alert('Senha alterada com sucesso!')
+      toast({
+        title: "Senha alterada",
+        description: "Sua senha foi alterada com sucesso.",
+      })
     } catch (error) {
       console.error('Erro ao alterar senha:', error)
-      alert('Erro ao alterar senha. Verifique a senha antiga.')
+      toast({
+        title: "Erro ao alterar senha",
+        description: "Verifique se a senha antiga está correta e tente novamente.",
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }

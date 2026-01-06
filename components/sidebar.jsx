@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { LayoutDashboard, Users, Building2, Tag, Receipt, Share2, LogOut, Menu, X } from 'lucide-react'
+import { LayoutDashboard, Users, Building2, Tag, Receipt, Share2, LogOut, Menu, X, Target, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { authAPI, isAdmin } from '@/lib/api'
 import { useState, useEffect } from 'react'
@@ -37,6 +37,16 @@ const menuItems = [
     title: 'Transações',
     href: '/transacoes',
     icon: Receipt,
+  },
+  {
+    title: 'Metas',
+    href: '/metas',
+    icon: Target,
+  },
+  {
+    title: 'Assistente IA',
+    href: '/assistente',
+    icon: Sparkles,
   },
   {
     title: 'Perfil',

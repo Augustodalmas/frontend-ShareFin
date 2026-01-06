@@ -219,38 +219,27 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
               <p className="text-xs text-muted-foreground">Insira o valor da transação</p>
             </div>
 
-            {/* 2. Tipo (entrada/saída) */}
-            <div className="space-y-2">
-              <Label htmlFor="type" className="text-sm font-medium">
-                Tipo <span className="text-red-500">*</span>
-              </Label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, type: "saida" })}
-                  className={`px-4 py-3 rounded-lg border-2 font-medium text-sm transition-all ${
-                    formData.type === "saida"
-                      ? "border-red-500 bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400"
-                      : "border-border bg-background text-muted-foreground hover:border-red-300"
-                  }`}
-                >
-                  <TrendingDown className="h-4 w-4 mx-auto mb-1" />
-                  Despesa
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, type: "entrada" })}
-                  className={`px-4 py-3 rounded-lg border-2 font-medium text-sm transition-all ${
-                    formData.type === "entrada"
-                      ? "border-green-500 bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-400"
-                      : "border-border bg-background text-muted-foreground hover:border-green-300"
-                  }`}
-                >
-                  <TrendingUp className="h-4 w-4 mx-auto mb-1" />
-                  Receita
-                </button>
+            {/* 2. Tipo (entrada/saída) - View Only */}
+            {formData.category && (
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">
+                  Tipo da Transação
+                </Label>
+                <div className={`px-4 py-3 rounded-lg border-2 font-medium text-sm flex items-center gap-2 ${
+                  formData.type === "saida"
+                    ? "border-red-200 bg-red-50 text-red-700 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900"
+                    : "border-green-200 bg-green-50 text-green-700 dark:bg-green-950/20 dark:text-green-400 dark:border-green-900"
+                }`}>
+                  {formData.type === "saida" ? (
+                    <TrendingDown className="h-4 w-4" />
+                  ) : (
+                    <TrendingUp className="h-4 w-4" />
+                  )}
+                  <span>{formData.type === "saida" ? "Despesa" : "Receita"}</span>
+                </div>
+                <p className="text-xs text-muted-foreground">Definido automaticamente pela categoria selecionada</p>
               </div>
-            </div>
+            )}
 
             {/* 3. Categoria */}
             <div className="space-y-2">

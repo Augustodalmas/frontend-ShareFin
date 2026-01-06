@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import { categoriesAPI } from '@/lib/api'
 import { getIconComponent } from '@/components/icon-picker'
+import { useToast } from '@/hooks/use-toast'
 
 interface Category {
   id: number
@@ -23,6 +24,7 @@ interface Category {
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [typeFilter, setTypeFilter] = useState<'1' | '2'>('2')
+  const { toast } = useToast()
 
   useEffect(() => {
     loadCategories()
@@ -58,13 +60,26 @@ export default function CategoriesPage() {
       }
       if ('id' in categoryData) {
         await categoriesAPI.update(categoryData.id, payload)
+        toast({
+          title: "Categoria atualizada",
+          description: "A categoria foi atualizada com sucesso.",
+        })
       } else {
         await categoriesAPI.create(payload)
+        toast({
+          title: "Categoria criada",
+          description: "A categoria foi criada com sucesso.",
+        })
       }
       await loadCategories()
       setEditingCategory(undefined)
     } catch (error) {
       console.error('Erro ao salvar categoria:', error)
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar a categoria. Tente novamente.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -77,9 +92,18 @@ export default function CategoriesPage() {
     if (confirm('Tem certeza que deseja excluir esta categoria?')) {
       try {
         await categoriesAPI.delete(category.id)
+        toast({
+          title: "Categoria excluída",
+          description: "A categoria foi excluída com sucesso.",
+        })
         await loadCategories()
       } catch (error) {
         console.error('Erro ao excluir categoria:', error)
+        toast({
+          title: "Erro ao excluir",
+          description: "Não foi possível excluir a categoria. Tente novamente.",
+          variant: "destructive",
+        })
       }
     }
   }
