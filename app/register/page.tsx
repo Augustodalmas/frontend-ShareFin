@@ -39,7 +39,7 @@ export default function RegisterPage() {
         senha,
         is_admin: false
       })
-      alert('Conta criada com sucesso! Faça login para continuar.')
+      alert('Conta criada com sucesso! Confirme sua conta em seu email para continuar.')
       router.push('/login')
     } catch (err) {
       setError('Erro ao criar conta. Tente novamente.')

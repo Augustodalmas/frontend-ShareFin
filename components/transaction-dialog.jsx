@@ -54,7 +54,7 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
         category: "",
         account: "",
         amount: "",
-        date: new Date().toISOString().split("T")[0],
+        date: "",
       })
     }
   }, [transaction, open])
@@ -225,11 +225,10 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
                 <Label className="text-sm font-medium">
                   Tipo da Transação
                 </Label>
-                <div className={`px-4 py-3 rounded-lg border-2 font-medium text-sm flex items-center gap-2 ${
-                  formData.type === "saida"
+                <div className={`px-4 py-3 rounded-lg border-2 font-medium text-sm flex items-center gap-2 ${formData.type === "saida"
                     ? "border-red-200 bg-red-50 text-red-700 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900"
                     : "border-green-200 bg-green-50 text-green-700 dark:bg-green-950/20 dark:text-green-400 dark:border-green-900"
-                }`}>
+                  }`}>
                   {formData.type === "saida" ? (
                     <TrendingDown className="h-4 w-4" />
                   ) : (

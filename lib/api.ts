@@ -125,7 +125,22 @@ export const usersAPI = {
 
 // Dashboard
 export const dashboardAPI = {
-  getStats: () => fetchAPI('/dashboard/stats'),
+  getStats: (params?: { data_transacao_low?: string; data_transacao_high?: string; conta?: string }) => {
+    const queryParams = new URLSearchParams()
+    if (params?.data_transacao_low) queryParams.append('data_transacao_low', params.data_transacao_low)
+    if (params?.data_transacao_high) queryParams.append('data_transacao_high', params.data_transacao_high)
+    if (params?.conta) queryParams.append('conta', params.conta)
+    const query = queryParams.toString()
+    return fetchAPI(`/dashboard${query ? `?${query}` : ''}`)
+  },
+}
+
+// Recorrências
+export const recurrenceAPI = {
+  getAll: () => fetchAPI('/recurrence'),
+  create: (data: any) => fetchAPI('/recurrence', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id: number, data: any) => fetchAPI(`/recurrence/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  delete: (id: number) => fetchAPI(`/recurrence/${id}`, { method: 'DELETE' }),
 }
 
 // Autenticação
