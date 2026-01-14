@@ -125,8 +125,8 @@ export default function UsersPage() {
         <DataTable
           data={users}
           columns={columns}
-          onEdit={userIsAdmin ? handleEdit : undefined}
-          onDelete={userIsAdmin ? handleDelete : undefined}
+        // onEdit={userIsAdmin ? handleEdit : undefined}
+        // onDelete={userIsAdmin ? handleDelete : undefined}
         />
 
         <UserDialog

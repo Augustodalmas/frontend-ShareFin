@@ -56,10 +56,20 @@ export default function ProfilePage() {
 
   const loadBalance = async () => {
     try {
-      const transactions = await transactionsAPI.getAll()
-      const totalEntradas = transactions.resultado.filter((t: any) => t.valor > 0).reduce((sum: number, t: any) => sum + t.valor, 0)
-      const totalSaidas = Math.abs(transactions.resultado.filter((t: any) => t.valor < 0).reduce((sum: number, t: any) => sum + t.valor, 0))
-      setBalance(totalEntradas - totalSaidas)
+      const userId = getUserIdFromToken()
+      if (!userId) return
+
+      const data = await transactionsAPI.getAll({ usuario: userId })
+
+      const list = Array.isArray(data)
+        ? data
+        : data.resultado || []
+
+      const balance = list.reduce((acc: number, t: any) => {
+        return acc + t.valor
+      }, 0)
+
+      setBalance(balance)
     } catch (error) {
       console.error('Erro ao carregar saldo:', error)
     }

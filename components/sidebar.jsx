@@ -19,14 +19,14 @@ const menuItems = [
     icon: Users,
   },
   {
-    title: 'Contas Bancárias',
-    href: '/contas',
-    icon: Building2,
-  },
-  {
     title: 'Compartilhadas',
     href: '/compartilhadas',
     icon: Share2,
+  },
+  {
+    title: 'Contas Bancárias',
+    href: '/contas',
+    icon: Building2,
   },
   {
     title: 'Categorias',

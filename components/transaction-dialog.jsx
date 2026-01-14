@@ -190,7 +190,20 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
           <DialogTitle>{transaction ? "Editar Transação" : "Nova Transação"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
+
+          {/* 6. Descrição */}
           <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-sm font-medium">
+                Descrição <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="Ex: Compra no supermercado"
+              />
+            </div>
             {/* 1. Valor (most important) */}
             <div className="space-y-2">
               <Label htmlFor="amount" className="text-sm font-medium">
@@ -226,8 +239,8 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
                   Tipo da Transação
                 </Label>
                 <div className={`px-4 py-3 rounded-lg border-2 font-medium text-sm flex items-center gap-2 ${formData.type === "saida"
-                    ? "border-red-200 bg-red-50 text-red-700 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900"
-                    : "border-green-200 bg-green-50 text-green-700 dark:bg-green-950/20 dark:text-green-400 dark:border-green-900"
+                  ? "border-red-200 bg-red-50 text-red-700 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900"
+                  : "border-green-200 bg-green-50 text-green-700 dark:bg-green-950/20 dark:text-green-400 dark:border-green-900"
                   }`}>
                   {formData.type === "saida" ? (
                     <TrendingDown className="h-4 w-4" />
@@ -387,7 +400,7 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
             </div>
 
             {/* 5. Data (prefilled with today) */}
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="date" className="text-sm font-medium">
                 Data <span className="text-red-500">*</span>
               </Label>
@@ -399,20 +412,8 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
                 max={new Date().toISOString().split("T")[0]}
                 required
               />
-            </div>
+            </div> */}
 
-            {/* 6. Descrição (optional, last) */}
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-sm font-medium">
-                Descrição <span className="text-muted-foreground text-xs">(opcional)</span>
-              </Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Ex: Compra no supermercado"
-              />
-            </div>
           </div>
           <DialogFooter className="gap-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
