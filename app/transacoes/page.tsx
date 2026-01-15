@@ -91,8 +91,9 @@ export default function TransactionsPage() {
 
     const formData = new FormData()
     formData.append('file', file)
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api-gerenciadorfinanceiro.onrender.com/api/v1'
 
-    const res = await fetch('http://localhost:8080/api/v1/transactions/import/csv', {
+    const res = await fetch(API_BASE_URL, {
       method: 'POST',
       body: formData,
     })
