@@ -25,6 +25,8 @@ interface Transaction {
 }
 
 export default function TransactionsPage() {
+  const [csvDrafts, setCsvDrafts] = useState<any[]>([])
+  const [editingCsvIndex, setEditingCsvIndex] = useState<number | null>(null)
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [accounts, setAccounts] = useState<any[]>([])
   const [categories, setCategories] = useState<any[]>([])
@@ -83,6 +85,39 @@ export default function TransactionsPage() {
     }
   }
 
+  const handleCsvUpload = async (e: any) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const res = await fetch('http://localhost:8080/api/v1/transactions/import/csv', {
+      method: 'POST',
+      body: formData,
+    })
+
+    const data = await res.json()
+
+    setCsvDrafts(data)
+  }
+
+  const openCsvDraft = (draft: any, index: number) => {
+    const valor = Number(draft.amount)
+    setEditingCsvIndex(index)
+
+    setEditingTransaction({
+      name: draft.title || "Sem descrição",
+      type: valor < 0 ? "entrada" : "saida",
+      category: "",
+      account: "",
+      amount: Math.abs(valor),
+      date: draft.date.split("T")[0],
+    } as any)
+
+    setDialogOpen(true)
+  }
+
   const loadTransactions = async () => {
     try {
       const params: any = {}
@@ -110,12 +145,14 @@ export default function TransactionsPage() {
           account: item.conta || "Sem conta",
           accountId: account?.id || 0,
           amount: Math.abs(item.valor),
-          date: item.data_transacao.split("T")[0],
+          date: item.data_transacao
+            ? item.data_transacao.split("T")[0]
+            : "",
         }
       })
 
-      const filtered = filters.tipo === 'all' 
-        ? mapped 
+      const filtered = filters.tipo === 'all'
+        ? mapped
         : mapped.filter((t: Transaction) => t.type === filters.tipo)
 
       setTransactions(filtered)
@@ -137,7 +174,7 @@ export default function TransactionsPage() {
         throw new Error("User ID not found in token. Please login again.")
       }
 
-      if ("id" in transactionData) {
+      if (transactionData.id) {
         const updatePayload = {
           conta: Number.parseInt(transactionData.account),
           categoria: Number.parseInt(transactionData.category),
@@ -160,6 +197,14 @@ export default function TransactionsPage() {
           data_transacao: transactionData.date,
         }
         await transactionsAPI.create(createPayload)
+
+        if (editingCsvIndex !== null) {
+          setCsvDrafts(prev =>
+            prev.filter((_, index) => index !== editingCsvIndex)
+          )
+          setEditingCsvIndex(null)
+        }
+
         toast({
           title: "Transação criada",
           description: "A transação foi criada com sucesso.",
@@ -267,9 +312,8 @@ export default function TransactionsPage() {
             <TrendingDown className="h-3 w-3 text-red-600" />
           )}
           <span
-            className={`text-xs sm:text-sm font-semibold whitespace-nowrap ${
-              row.type === "entrada" ? "text-green-600" : "text-red-600"
-            }`}
+            className={`text-xs sm:text-sm font-semibold whitespace-nowrap ${row.type === "entrada" ? "text-green-600" : "text-red-600"
+              }`}
           >
             {row.type === "entrada" ? "+" : "-"}
             {formatCurrency(row.amount)}
@@ -316,31 +360,28 @@ export default function TransactionsPage() {
             <div className="inline-flex rounded-lg border border-border bg-card p-1 flex-1">
               <button
                 onClick={() => setFilters({ ...filters, tipo: 'all' })}
-                className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                  filters.tipo === 'all'
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
+                className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${filters.tipo === 'all'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+                  }`}
               >
                 Todas
               </button>
               <button
                 onClick={() => setFilters({ ...filters, tipo: 'saida' })}
-                className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                  filters.tipo === 'saida'
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
+                className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${filters.tipo === 'saida'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+                  }`}
               >
                 Despesas
               </button>
               <button
                 onClick={() => setFilters({ ...filters, tipo: 'entrada' })}
-                className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                  filters.tipo === 'entrada'
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
+                className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${filters.tipo === 'entrada'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+                  }`}
               >
                 Receitas
               </button>
@@ -413,31 +454,28 @@ export default function TransactionsPage() {
             <div className="inline-flex rounded-lg border border-border bg-card p-1">
               <button
                 onClick={() => setFilters({ ...filters, tipo: 'all' })}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                  filters.tipo === 'all'
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${filters.tipo === 'all'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+                  }`}
               >
                 Todas
               </button>
               <button
                 onClick={() => setFilters({ ...filters, tipo: 'saida' })}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                  filters.tipo === 'saida'
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${filters.tipo === 'saida'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+                  }`}
               >
                 Despesas
               </button>
               <button
                 onClick={() => setFilters({ ...filters, tipo: 'entrada' })}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                  filters.tipo === 'entrada'
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${filters.tipo === 'entrada'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+                  }`}
               >
                 Receitas
               </button>
@@ -504,6 +542,9 @@ export default function TransactionsPage() {
               className="px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
+          <Button variant="outline" onClick={() => document.getElementById('csvInput')?.click()}>
+            Importar CSV Nubank
+          </Button>
 
           {hasActiveFilters && (
             <div className="flex items-center gap-2">
@@ -514,6 +555,38 @@ export default function TransactionsPage() {
             </div>
           )}
         </div>
+
+        <input
+          id="csvInput"
+          type="file"
+          accept=".csv"
+          className="hidden"
+          onChange={handleCsvUpload}
+        />
+
+        {csvDrafts.length > 0 && (
+          <div className="mb-6 space-y-2">
+            <h3 className="text-sm font-medium text-muted-foreground">
+              Transações importadas (não salvas)
+            </h3>
+
+            {csvDrafts.map((item, index) => (
+
+              <div
+                key={index}
+                className="flex items-center justify-between border rounded p-2"
+              >
+                <span className="text-sm">
+                  {item.title || "Sem descrição"} – R$ {Number(item.amount).toFixed(2)}
+                </span>
+
+                <Button size="sm" onClick={() => openCsvDraft(item, index)}>
+                  Completar
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
 
         <DataTable data={transactions} columns={columns} onEdit={handleEdit} onDelete={handleDelete} onAdd={handleAdd} addButtonText="Nova Transação" />
 

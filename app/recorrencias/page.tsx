@@ -55,7 +55,6 @@ interface Recurrence {
 //         accountsAPI.getAll(),
 //         categoriesAPI.getAll(),
 //       ])
-//       console.log(recurrencesData)
 
 //       const mapped = recurrencesData.map((rec: any) => ({
 //         id: rec.id,

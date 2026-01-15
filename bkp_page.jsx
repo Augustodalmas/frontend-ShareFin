@@ -46,8 +46,6 @@ export default function DashboardPage() {
         categoriesAPI.getAll(),
       ])
 
-      console.log(dashboardStats)
-
       setAccounts(accountsData)
 
       setStats({

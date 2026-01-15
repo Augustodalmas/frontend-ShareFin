@@ -23,7 +23,6 @@ function isAdmin() {
 
   try {
     const payload = JSON.parse(atob(token.split('.')[1]))
-    console.log(payload)
     return payload.is_admin === true
   } catch {
     return false

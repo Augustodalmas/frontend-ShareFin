@@ -17,7 +17,7 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
     type: "saida",
     category: "",
     account: "",
-    date: new Date().toISOString().split("T")[0],
+    date: "",
     name: "",
   })
 
@@ -54,7 +54,7 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
         category: "",
         account: "",
         amount: "",
-        date: "",
+        date: new Date().toISOString().split("T")[0],
       })
     }
   }, [transaction, open])
@@ -400,7 +400,7 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
             </div>
 
             {/* 5. Data (prefilled with today) */}
-            {/* <div className="space-y-2">
+            <div className="space-y-2">
               <Label htmlFor="date" className="text-sm font-medium">
                 Data <span className="text-red-500">*</span>
               </Label>
@@ -412,7 +412,7 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
                 max={new Date().toISOString().split("T")[0]}
                 required
               />
-            </div> */}
+            </div>
 
           </div>
           <DialogFooter className="gap-2">
