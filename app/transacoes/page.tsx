@@ -355,6 +355,16 @@ export default function TransactionsPage() {
           description="Gerencie todas as suas transações financeiras"
         />
 
+        <div className="lg:hidden mb-4">
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => document.getElementById('csvInput')?.click()}
+          >
+            Importar CSV Nubank
+          </Button>
+        </div>
+
         <MobileFilters hasActiveFilters={hasActiveFilters} onClearFilters={clearFilters}>
           <div className="flex items-center gap-3 mb-3">
             <span className="text-sm font-medium text-muted-foreground">Tipo:</span>
