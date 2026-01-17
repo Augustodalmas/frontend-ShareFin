@@ -35,9 +35,9 @@ export default function DashboardPage() {
   }, [])
 
   const last6MonthsChartData = last6Months.map((item) => ({
-    mes: item.mes,
-    receitas: item.receitas,
-    despesas: Math.abs(item.despesas),
+    month: item.month,
+    expenses: Math.abs(item.expenses || 0),
+    revenues: Math.abs(item.revenues || 0),
   }))
 
 
@@ -66,15 +66,15 @@ export default function DashboardPage() {
       setAccounts(accountsData)
 
       setStats({
-        totalEntradas: dashboardStats.receitas || 0,
-        totalSaidas: Math.abs(dashboardStats.despesas || 0),
+        totalEntradas: dashboardStats.revenues || 0,
+        totalSaidas: Math.abs(dashboardStats.expenses || 0),
         saldoAtual: dashboardStats.total || 0,
         totalTransacoes: dashboardStats.count || 0,
         totalContas: accountsData.length,
         totalCategorias: categories.length,
       })
 
-      setCategorias(dashboardStats.categorias || [])
+      setCategorias(dashboardStats.categories || [])
       setLast6Months(dashboardStats.last6 || [])
 
     } catch (error) {
@@ -323,12 +323,12 @@ export default function DashboardPage() {
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
-                    data={categorias.filter(c => c.receitas > 0)}
+                    data={categorias.filter(c => c.revenues > 0)}
                     cx="50%"
                     cy="50%"
                     outerRadius={80}
-                    dataKey="receitas"
-                    nameKey="categoria"
+                    dataKey="revenues"
+                    nameKey="categorie"
                   >
                     {categorias.map((_, index) => (
                       <Cell key={index} fill={`hsl(${index * 45 + 120}, 65%, 55%)`} />
@@ -364,13 +364,17 @@ export default function DashboardPage() {
                 <PieChart>
                   <Pie
                     data={categorias
-                      .filter(c => c.despesas < 0)
-                      .map(c => ({ ...c, despesas: Math.abs(c.despesas) }))}
+                      .filter(c => c.expenses < 0)
+                      .map(c => ({
+                        ...c,
+                        expenses: Math.abs(c.expenses),
+                      }))
+                    }
                     cx="50%"
                     cy="50%"
                     outerRadius={80}
-                    dataKey="despesas"
-                    nameKey="categoria"
+                    dataKey="expenses"
+                    nameKey="categorie"
                   >
                     {categorias.map((_, index) => (
                       <Cell key={index} fill={`hsl(${index * 45}, 65%, 55%)`} />
@@ -412,7 +416,7 @@ export default function DashboardPage() {
               <BarChart data={last6MonthsChartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis
-                  dataKey="mes"
+                  dataKey="month"
                   tick={{ fontSize: 12 }}
                   stroke="hsl(var(--muted-foreground))"
                 />
@@ -428,7 +432,7 @@ export default function DashboardPage() {
 
                 {/* Receitas */}
                 <Bar
-                  dataKey="receitas"
+                  dataKey="revenues"
                   name="Receitas"
                   fill="hsl(142, 65%, 45%)"
                   radius={[4, 4, 0, 0]}
@@ -445,7 +449,7 @@ export default function DashboardPage() {
 
                 {/* Despesas (valor negativo, mas visual positivo) */}
                 <Bar
-                  dataKey="despesas"
+                  dataKey="expenses"
                   name="Despesas"
                   fill="hsl(0, 70%, 55%)"
                   radius={[4, 4, 0, 0]}
