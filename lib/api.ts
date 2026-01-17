@@ -78,6 +78,7 @@ export const transactionsAPI = {
     const query = queryParams.toString()
     return fetchAPI(`/transactions${query ? `?${query}` : ''}`)
   },
+  getById: (id: number) => fetchAPI(`/transaction/${id}`),
   getShared: () => fetchAPI('/transactions/share'),
   create: (data: any) => fetchAPI('/transactions', { method: 'POST', body: JSON.stringify(data) }),
   update: (id: number, data: any) => fetchAPI(`/transactions/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),

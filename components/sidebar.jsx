@@ -84,12 +84,14 @@ export function Sidebar() {
   return (
     <>
       {/* Mobile Menu Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 left-4 z-50 lg:hidden rounded-lg bg-card p-2 border border-border shadow-lg"
-      >
-        {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-      </button>
+      {!isOpen && (
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="fixed top-4 left-4 z-50 lg:hidden rounded-lg bg-card p-2 border border-border shadow-lg"
+        >
+          {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        </button>
+      )}
 
       {/* Overlay */}
       {isOpen && (

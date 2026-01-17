@@ -8,6 +8,7 @@ import { TransactionDialog } from "@/components/transaction-dialog"
 import { FeedbackWidget } from "@/components/feedback-widget"
 import { MobileFilters } from "@/components/mobile-filters"
 import { Button } from "@/components/ui/button"
+import { TransactionViewModal } from "@/components/transaction-view-modal"
 import { Plus, TrendingUp, TrendingDown } from "lucide-react"
 import { transactionsAPI, getUserIdFromToken, categoriesAPI, accountsAPI } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
@@ -25,6 +26,8 @@ interface Transaction {
 }
 
 export default function TransactionsPage() {
+  const [viewOpen, setViewOpen] = useState(false)
+  const [viewTransaction, setViewTransaction] = useState<Transaction | null>(null)
   const [csvDrafts, setCsvDrafts] = useState<any[]>([])
   const [editingCsvIndex, setEditingCsvIndex] = useState<number | null>(null)
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -117,6 +120,32 @@ export default function TransactionsPage() {
     } as any)
 
     setDialogOpen(true)
+  }
+
+  const handleView = async (id: number) => {
+    try {
+      const data = await transactionsAPI.getById(id)
+
+      setViewTransaction({
+        id: data.id,
+        name: data.obs || "Sem descrição",
+        type: data.valor > 0 ? "entrada" : "saida",
+        category: data.categoria,
+        categoryId: data.categoria_id,
+        account: data.conta,
+        accountId: data.conta_id,
+        amount: Math.abs(data.valor),
+        date: data.data_transacao.split("T")[0],
+      })
+
+      setViewOpen(true)
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar a transação.",
+        variant: "destructive",
+      })
+    }
   }
 
   const loadTransactions = async () => {
@@ -599,7 +628,15 @@ export default function TransactionsPage() {
           </div>
         )}
 
-        <DataTable data={transactions} columns={columns} onEdit={handleEdit} onDelete={handleDelete} onAdd={handleAdd} addButtonText="Nova Transação" />
+        <DataTable
+          data={transactions}
+          columns={columns}
+          onRowClick={(row) => handleView(row.id)}
+          // onEdit={handleEdit}
+          // onDelete={handleDelete}
+          onAdd={handleAdd}
+          addButtonText="Nova Transação"
+        />
 
         <TransactionDialog
           open={dialogOpen}
@@ -607,6 +644,24 @@ export default function TransactionsPage() {
           transaction={editingTransaction}
           onSave={handleSave}
         />
+
+        <TransactionViewModal
+          open={viewOpen}
+          onOpenChange={setViewOpen}
+          transaction={viewTransaction}
+          onEdit={() => {
+            setViewOpen(false)
+
+            setTimeout(() => {
+              handleEdit(viewTransaction!)
+            }, 0)
+          }}
+          onDelete={() => {
+            setViewOpen(false)
+            handleDelete(viewTransaction!)
+          }}
+        />
+
       </main>
     </div>
   )

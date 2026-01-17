@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button"
 import { Pencil, Trash2, FileX, Plus } from "lucide-react"
 
-export function DataTable({ data, columns, onEdit, onDelete, onAdd, addButtonText = "Adicionar" }) {
+export function DataTable({ data, columns, onRowClick, onEdit, onDelete, onAdd, addButtonText = "Adicionar" }) {
   return (
     <div className="rounded-lg border border-border bg-card overflow-hidden w-full shadow-sm">
       <div className="w-full overflow-x-auto">
@@ -48,7 +48,10 @@ export function DataTable({ data, columns, onEdit, onDelete, onAdd, addButtonTex
               </TableRow>
             ) : (
               data.map((row) => (
-                <TableRow key={row.id} className="hover:bg-accent/50 transition-colors">
+                <TableRow
+                  key={row.id}
+                  onClick={() => onRowClick?.(row)}
+                  className="hover:bg-accent/50 transition-colors cursor-pointer">
                   {columns.map((column, index) => (
                     <TableCell key={index} className={column.className}>
                       {typeof column.accessor === "function" ? column.accessor(row) : String(row[column.accessor])}
@@ -62,7 +65,10 @@ export function DataTable({ data, columns, onEdit, onDelete, onAdd, addButtonTex
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 hover:bg-primary/10 hover:text-primary"
-                            onClick={() => onEdit(row)}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onEdit(row)
+                            }}
                             aria-label="Editar"
                           >
                             <Pencil className="h-4 w-4" />
@@ -73,7 +79,10 @@ export function DataTable({ data, columns, onEdit, onDelete, onAdd, addButtonTex
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
-                            onClick={() => onDelete(row)}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onDelete(row)
+                            }}
                             aria-label="Excluir"
                           >
                             <Trash2 className="h-4 w-4" />
