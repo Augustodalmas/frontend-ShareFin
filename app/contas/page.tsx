@@ -26,9 +26,9 @@ export default function AccountsPage() {
   const [accounts, setAccounts] = useState<BankAccount[]>([])
   const { toast } = useToast()
   const [filters, setFilters] = useState({
-    nome: '',
-    moeda: '',
-    ativa: '',
+    name: '',
+    coin: '',
+    ative: '',
     share: '',
   })
 
@@ -47,18 +47,18 @@ export default function AccountsPage() {
   const loadAccounts = async () => {
     try {
       const params: any = {}
-      if (filters.nome) params.nome = filters.nome
-      if (filters.moeda) params.moeda = filters.moeda
-      if (filters.ativa) params.ativa = filters.ativa
+      if (filters.name) params.name = filters.name
+      if (filters.coin) params.coin = filters.coin
+      if (filters.ative) params.ative = filters.ative
       if (filters.share) params.share = filters.share
-      
+
       const data = await accountsAPI.getAll(Object.keys(params).length > 0 ? params : undefined)
       const mapped = data.map((item: any) => ({
         id: item.id,
-        name: item.nome,
-        currency: item.moeda,
+        name: item.name,
+        currency: item.coin,
         color: item.cor,
-        active: item.ativa,
+        active: item.ative,
         share: item.share || false,
         sharewith: item.sharewith || null,
       }))
@@ -77,10 +77,10 @@ export default function AccountsPage() {
 
       const payload: any = {
         user: userId,
-        nome: accountData.name,
-        moeda: accountData.currency,
+        name: accountData.name,
+        coin: accountData.currency,
         cor: accountData.color,
-        ativa: accountData.active,
+        ative: accountData.active,
         share: accountData.share,
       }
 
@@ -150,10 +150,10 @@ export default function AccountsPage() {
   }
 
   const clearFilters = () => {
-    setFilters({ nome: '', moeda: '', ativa: '', share: '' })
+    setFilters({ name: '', coin: '', ative: '', share: '' })
   }
 
-  const hasActiveFilters = filters.nome || filters.moeda || filters.ativa || filters.share
+  const hasActiveFilters = filters.name || filters.coin || filters.ative || filters.share
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -164,7 +164,7 @@ export default function AccountsPage() {
 
   const columns = [
     { header: 'Nome da Conta', accessor: 'name' as const, className: 'text-sm sm:text-base' },
-    { header: 'Moeda', accessor: 'currency' as const, className: 'text-sm hidden sm:table-cell' },
+    { header: 'coin', accessor: 'currency' as const, className: 'text-sm hidden sm:table-cell' },
     {
       header: 'Compartilhamento',
       accessor: (row: BankAccount) => (
@@ -190,20 +190,20 @@ export default function AccountsPage() {
           <input
             type="text"
             placeholder="Filtrar por nome..."
-            value={filters.nome}
-            onChange={(e) => setFilters({ ...filters, nome: e.target.value })}
+            value={filters.name}
+            onChange={(e) => setFilters({ ...filters, name: e.target.value })}
             className="w-full px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
           <input
             type="text"
             placeholder="Filtrar por moeda..."
-            value={filters.moeda}
-            onChange={(e) => setFilters({ ...filters, moeda: e.target.value })}
+            value={filters.coin}
+            onChange={(e) => setFilters({ ...filters, coin: e.target.value })}
             className="w-full px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
           <select
-            value={filters.ativa}
-            onChange={(e) => setFilters({ ...filters, ativa: e.target.value })}
+            value={filters.ative}
+            onChange={(e) => setFilters({ ...filters, ative: e.target.value })}
             className="w-full px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           >
             <option value="">Todas (Ativa/Inativa)</option>
@@ -226,20 +226,20 @@ export default function AccountsPage() {
             <input
               type="text"
               placeholder="Filtrar por nome..."
-              value={filters.nome}
-              onChange={(e) => setFilters({ ...filters, nome: e.target.value })}
+              value={filters.name}
+              onChange={(e) => setFilters({ ...filters, name: e.target.value })}
               className="px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
             <input
               type="text"
               placeholder="Filtrar por moeda..."
-              value={filters.moeda}
-              onChange={(e) => setFilters({ ...filters, moeda: e.target.value })}
+              value={filters.coin}
+              onChange={(e) => setFilters({ ...filters, coin: e.target.value })}
               className="px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
             <select
-              value={filters.ativa}
-              onChange={(e) => setFilters({ ...filters, ativa: e.target.value })}
+              value={filters.ative}
+              onChange={(e) => setFilters({ ...filters, ative: e.target.value })}
               className="px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             >
               <option value="">Todas (Ativa/Inativa)</option>

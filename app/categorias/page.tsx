@@ -18,7 +18,7 @@ interface Category {
   name: string
   color: string
   type: 1 | 2
-  icone?: string
+  icon?: string
 }
 
 export default function CategoriesPage() {
@@ -32,13 +32,13 @@ export default function CategoriesPage() {
 
   const loadCategories = async () => {
     try {
-      const data = await categoriesAPI.getAll({ tipo: typeFilter })
+      const data = await categoriesAPI.getAll({ type: typeFilter })
       const mapped = data.map((item: any) => ({
         id: item.id,
-        name: item.nome,
-        color: item.cor,
-        type: parseInt(item.tipo),
-        icone: item.icone,
+        name: item.name,
+        color: item.color,
+        type: parseInt(item.type),
+        icon: item.icon,
       }))
       setCategories(mapped)
     } catch (error) {
@@ -52,11 +52,11 @@ export default function CategoriesPage() {
   const handleSave = async (categoryData: Omit<Category, 'id'> | Category) => {
     try {
       const payload = {
-        nome: categoryData.name,
-        cor: categoryData.color,
-        tipo: categoryData.type,
-        valor_inicial: 0,
-        icone: categoryData.icone || 'ShoppingCart',
+        name: categoryData.name,
+        color: categoryData.color,
+        type: categoryData.type,
+        initial_value: 0,
+        icon: categoryData.icon || 'ShoppingCart',
       }
       if ('id' in categoryData) {
         await categoriesAPI.update(categoryData.id, payload)
@@ -117,7 +117,7 @@ export default function CategoriesPage() {
     {
       header: 'Nome da Categoria',
       accessor: (row: Category) => {
-        const IconComponent = getIconComponent(row.icone)
+        const IconComponent = getIconComponent(row.icon)
         return (
           <div className="flex items-center gap-2">
             <IconComponent className="h-4 w-4 sm:h-5 sm:w-5" style={{ color: row.color }} />
@@ -127,7 +127,7 @@ export default function CategoriesPage() {
       },
     },
     {
-      header: 'Tipo',
+      header: 'type',
       accessor: (row: Category) => (
         <span className="text-xs sm:text-sm text-muted-foreground">
           {row.type === 1 ? 'Despesa' : 'Receita'}
@@ -148,13 +148,13 @@ export default function CategoriesPage() {
 
         <MobileFilters>
           <div className="flex items-center gap-3 mb-3">
-            <span className="text-sm font-medium text-muted-foreground">Tipo:</span>
+            <span className="text-sm font-medium text-muted-foreground">type:</span>
             <div className="inline-flex rounded-lg border border-border bg-card p-1 flex-1">
               <button
                 onClick={() => setTypeFilter('2')}
                 className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${typeFilter === '2'
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
                   }`}
               >
                 Receitas
@@ -162,8 +162,8 @@ export default function CategoriesPage() {
               <button
                 onClick={() => setTypeFilter('1')}
                 className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${typeFilter === '1'
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
                   }`}
               >
                 Despesas
@@ -174,13 +174,13 @@ export default function CategoriesPage() {
 
         <div className="hidden lg:block mb-6">
           <div className="flex items-center gap-3">
-            <span className="text-sm font-medium text-muted-foreground">Tipo:</span>
+            <span className="text-sm font-medium text-muted-foreground">type:</span>
             <div className="inline-flex rounded-lg border border-border bg-card p-1">
               <button
                 onClick={() => setTypeFilter('2')}
                 className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${typeFilter === '2'
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
                   }`}
               >
                 Receitas
@@ -188,8 +188,8 @@ export default function CategoriesPage() {
               <button
                 onClick={() => setTypeFilter('1')}
                 className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${typeFilter === '1'
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
                   }`}
               >
                 Despesas

@@ -67,14 +67,14 @@ async function fetchAPI(endpoint: string, options?: RequestInit) {
 
 // Transações
 export const transactionsAPI = {
-  getAll: (params?: { conta?: string; categoria?: string; usuario?: string; obs?: string; data_transacao_low?: string; data_transacao_high?: string }) => {
+  getAll: (params?: { account?: string; category?: string; user?: string; name?: string; date_transaction_low?: string; date_transaction_high?: string }) => {
     const queryParams = new URLSearchParams()
-    if (params?.conta) queryParams.append('conta', params.conta)
-    if (params?.categoria) queryParams.append('categoria', params.categoria)
-    if (params?.usuario) queryParams.append('usuario', params.usuario)
-    if (params?.obs) queryParams.append('obs', params.obs)
-    if (params?.data_transacao_low) queryParams.append('data_transacao_low', params.data_transacao_low)
-    if (params?.data_transacao_high) queryParams.append('data_transacao_high', params.data_transacao_high)
+    if (params?.account) queryParams.append('account', params.account)
+    if (params?.category) queryParams.append('category', params.category)
+    if (params?.user) queryParams.append('user', params.user)
+    if (params?.name) queryParams.append('name', params.name)
+    if (params?.date_transaction_low) queryParams.append('date_transaction_low', params.date_transaction_low)
+    if (params?.date_transaction_high) queryParams.append('date_transaction_high', params.date_transaction_high)
     const query = queryParams.toString()
     return fetchAPI(`/transactions${query ? `?${query}` : ''}`)
   },
@@ -87,10 +87,10 @@ export const transactionsAPI = {
 
 // Categorias
 export const categoriesAPI = {
-  getAll: (params?: { nome?: string; tipo?: string }) => {
+  getAll: (params?: { name?: string; type?: string }) => {
     const queryParams = new URLSearchParams()
-    if (params?.nome) queryParams.append('nome', params.nome)
-    if (params?.tipo) queryParams.append('tipo', params.tipo)
+    if (params?.name) queryParams.append('name', params.name)
+    if (params?.type) queryParams.append('type', params.type)
     const query = queryParams.toString()
     return fetchAPI(`/category${query ? `?${query}` : ''}`)
   },
@@ -99,13 +99,13 @@ export const categoriesAPI = {
   delete: (id: number) => fetchAPI(`/category/${id}`, { method: 'DELETE' }),
 }
 
-// Contas
+// accounts
 export const accountsAPI = {
-  getAll: (params?: { nome?: string; moeda?: string; ativa?: string; share?: string }) => {
+  getAll: (params?: { name?: string; coin?: string; ative?: string; share?: string }) => {
     const queryParams = new URLSearchParams()
-    if (params?.nome) queryParams.append('nome', params.nome)
-    if (params?.moeda) queryParams.append('moeda', params.moeda)
-    if (params?.ativa) queryParams.append('ativa', params.ativa)
+    if (params?.name) queryParams.append('name', params.name)
+    if (params?.coin) queryParams.append('coin', params.coin)
+    if (params?.ative) queryParams.append('ative', params.ative)
     if (params?.share) queryParams.append('share', params.share)
     const query = queryParams.toString()
     return fetchAPI(`/account${query ? `?${query}` : ''}`)
@@ -126,11 +126,11 @@ export const usersAPI = {
 
 // Dashboard
 export const dashboardAPI = {
-  getStats: (params?: { data_transacao_low?: string; data_transacao_high?: string; conta?: string }) => {
+  getStats: (params?: { date_transaction_low?: string; date_transaction_high?: string; account?: string }) => {
     const queryParams = new URLSearchParams()
-    if (params?.data_transacao_low) queryParams.append('data_transacao_low', params.data_transacao_low)
-    if (params?.data_transacao_high) queryParams.append('data_transacao_high', params.data_transacao_high)
-    if (params?.conta) queryParams.append('conta', params.conta)
+    if (params?.date_transaction_low) queryParams.append('date_transaction_low', params.date_transaction_low)
+    if (params?.date_transaction_high) queryParams.append('date_transaction_high', params.date_transaction_high)
+    if (params?.account) queryParams.append('account', params.account)
     const query = queryParams.toString()
     return fetchAPI(`/dashboard${query ? `?${query}` : ''}`)
   },
@@ -146,11 +146,11 @@ export const recurrenceAPI = {
 
 // Autenticação
 export const authAPI = {
-  login: async (email: string, senha: string) => {
+  login: async (email: string, password: string) => {
     const response = await fetch(`${API_BASE_URL}/usuario/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, senha }),
+      body: JSON.stringify({ email, password }),
     })
 
     if (!response.ok) {

@@ -14,7 +14,7 @@ interface SharedTransaction {
   type: 'entrada' | 'saida'
   category: string
   account: string
-  usuario: string
+  user: string
   amount: number
   date: string
 }
@@ -30,16 +30,16 @@ export default function SharedTransactionsPage() {
   const loadSharedTransactions = async () => {
     try {
       const data = await transactionsAPI.getShared()
-      
+
       const mapped = data.map((item: any) => ({
         id: item.id,
-        name: item.obs || 'Sem descrição',
-        type: item.valor > 0 ? 'entrada' : 'saida',
-        category: item.categoria || 'Sem categoria',
-        account: item.conta || 'Sem conta',
-        usuario: item.usuario || 'Sem usuário',
-        amount: Math.abs(item.valor),
-        date: item.data_transacao.split('T')[0],
+        name: item.name || 'Sem descrição',
+        type: item.value > 0 ? 'entrada' : 'saida',
+        category: item.category || 'Sem categoria',
+        account: item.account || 'Sem conta',
+        user: item.user || 'Sem usuário',
+        amount: Math.abs(item.value),
+        date: item.date_transaction.split('T')[0],
       }))
       setTransactions(mapped)
     } catch (error) {
@@ -72,7 +72,7 @@ export default function SharedTransactionsPage() {
     },
     {
       header: 'Usuário',
-      accessor: 'usuario' as const,
+      accessor: 'user' as const,
       className: 'text-muted-foreground text-xs sm:text-sm hidden md:table-cell',
     },
     {
@@ -89,9 +89,8 @@ export default function SharedTransactionsPage() {
       header: 'Valor',
       accessor: (row: SharedTransaction) => (
         <span
-          className={`text-xs sm:text-sm font-semibold whitespace-nowrap ${
-            row.type === 'entrada' ? 'text-green-600' : 'text-red-600'
-          }`}
+          className={`text-xs sm:text-sm font-semibold whitespace-nowrap ${row.type === 'entrada' ? 'text-green-600' : 'text-red-600'
+            }`}
         >
           {row.type === 'entrada' ? '+' : '-'}
           {formatCurrency(row.amount)}

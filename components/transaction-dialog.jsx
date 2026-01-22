@@ -64,7 +64,7 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
       const data = await categoriesAPI.getAll()
       const mapped = data.map((item) => ({
         ...item,
-        tipo: Number.parseInt(item.tipo),
+        type: Number.parseInt(item.type),
       }))
       setCategories(mapped)
     } catch (error) {
@@ -121,17 +121,17 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
       setCategoryError("") // limpa erro anterior
 
       const created = await categoriesAPI.create({
-        nome: newCategory.name,
-        cor: newCategory.color,
-        tipo: newCategory.type,
-        valor_inicial: 0,
-        icone: newCategory.icone,
+        name: newCategory.name,
+        color: newCategory.color,
+        type: newCategory.type,
+        initial_value: 0,
+        icon: newCategory.icon,
       })
 
       const updatedCategories = await categoriesAPI.getAll()
       const mapped = updatedCategories.map((item) => ({
         ...item,
-        tipo: Number.parseInt(item.tipo),
+        type: Number.parseInt(item.type),
       }))
       setCategories(mapped)
 
@@ -142,7 +142,7 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
       }
 
       setShowCategoryDialog(false)
-      setNewCategory({ name: "", color: "#3b82f6", type: 1, icone: "ShoppingCart" })
+      setNewCategory({ name: "", color: "#3b82f6", type: 1, icon: "ShoppingCart" })
     } catch (error) {
       console.error("Erro ao criar categoria:", error)
       setCategoryError("Erro ao criar categoria. Tente novamente.")
@@ -163,10 +163,10 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
 
       const created = await accountsAPI.create({
         user: userId,
-        nome: newAccount.name,
-        moeda: newAccount.currency,
-        cor: newAccount.color,
-        ativa: true,
+        name: newAccount.name,
+        coin: newAccount.currency,
+        color: newAccount.color,
+        ative: true,
       })
       const updatedAccounts = await accountsAPI.getAll()
       setAccounts(updatedAccounts)
@@ -264,7 +264,7 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
                   value={formData.category}
                   onValueChange={(value) => {
                     const selectedCategory = categories.find((c) => c.id.toString() === value)
-                    const newType = selectedCategory?.tipo === 1 ? "saida" : "entrada"
+                    const newType = selectedCategory?.type === 1 ? "saida" : "entrada"
                     setFormData({ ...formData, category: value, type: newType })
                   }}
                 >
@@ -273,12 +273,12 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((category) => {
-                      const IconComponent = getIconComponent(category.icone)
+                      const IconComponent = getIconComponent(category.icon)
                       return (
                         <SelectItem key={category.id} value={category.id.toString()}>
                           <div className="flex items-center gap-2">
-                            <IconComponent className="h-4 w-4" style={{ color: category.cor }} />
-                            <span>{category.nome}</span>
+                            <IconComponent className="h-4 w-4" style={{ color: category.color }} />
+                            <span>{category.name}</span>
                           </div>
                         </SelectItem>
                       )
@@ -307,8 +307,8 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
                     <option value={2}>Receita</option>
                   </select>
                   <IconPicker
-                    value={newCategory.icone}
-                    onChange={(icone) => setNewCategory({ ...newCategory, icone })}
+                    value={newCategory.icon}
+                    onChange={(icon) => setNewCategory({ ...newCategory, icon })}
                   />
                   <div>
                     <Label className="text-xs">Cor</Label>
@@ -354,7 +354,7 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
                   <SelectContent>
                     {accounts.map((account) => (
                       <SelectItem key={account.id} value={account.id.toString()}>
-                        {account.nome}
+                        {account.name}
                       </SelectItem>
                     ))}
                   </SelectContent>

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { usersAPI, accountsAPI, transactionsAPI, getUserIdFromToken } from '@/lib/api'
+import { usersAPI, transactionsAPI, getUserIdFromToken } from '@/lib/api'
 import { User, Wallet, Lock, Copy, Check } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
@@ -17,7 +17,7 @@ export default function ProfilePage() {
   const [balance, setBalance] = useState(0)
   const [editMode, setEditMode] = useState(false)
   const [changePassword, setChangePassword] = useState(false)
-  const [formData, setFormData] = useState({ nome: '', email: '' })
+  const [formData, setFormData] = useState({ name: '', email: '' })
   const [passwordData, setPasswordData] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' })
   const [loading, setLoading] = useState(false)
   const [copiedCode, setCopiedCode] = useState(false)
@@ -36,7 +36,7 @@ export default function ProfilePage() {
       const data = await usersAPI.getById(userId)
       const currentUser = Array.isArray(data) ? data[0] : data
       setUser(currentUser)
-      setFormData({ nome: currentUser.nome, email: currentUser.email })
+      setFormData({ name: currentUser.name, email: currentUser.email })
     } catch (error) {
       console.error('Erro ao carregar usuário:', error)
     }
@@ -59,14 +59,14 @@ export default function ProfilePage() {
       const userId = getUserIdFromToken()
       if (!userId) return
 
-      const data = await transactionsAPI.getAll({ usuario: userId })
+      const data = await transactionsAPI.getAll({ user: userId })
 
       const list = Array.isArray(data)
         ? data
-        : data.resultado || []
+        : data.result || []
 
       const balance = list.reduce((acc: number, t: any) => {
-        return acc + t.valor
+        return acc + t.value
       }, 0)
 
       setBalance(balance)
@@ -79,7 +79,7 @@ export default function ProfilePage() {
     if (!user) return
     setLoading(true)
     try {
-      const payload: any = { nome: formData.nome, email: formData.email }
+      const payload: any = { name: formData.name, email: formData.email }
       if (user.is_admin !== undefined && user.is_admin !== null) {
         payload.is_admin = user.is_admin
       }
@@ -114,7 +114,7 @@ export default function ProfilePage() {
     if (!user) return
     setLoading(true)
     try {
-      const payload: any = { senha_antiga: passwordData.oldPassword, senha: passwordData.newPassword }
+      const payload: any = { oldPassword: passwordData.oldPassword, password: passwordData.newPassword }
       if (user.is_admin !== undefined && user.is_admin !== null) {
         payload.is_admin = user.is_admin
       }
@@ -172,11 +172,11 @@ export default function ProfilePage() {
             <CardContent className="space-y-2">
               <div>
                 <p className="text-sm text-muted-foreground">Data de Cadastro</p>
-                <p className="font-medium">{new Date(user.criado_em).toLocaleDateString('pt-BR')}</p>
+                <p className="font-medium">{new Date(user.created_at).toLocaleDateString('pt-BR')}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Última Atualização</p>
-                <p className="font-medium">{new Date(user.atualizado_em).toLocaleDateString('pt-BR')}</p>
+                <p className="font-medium">{new Date(user.update_at).toLocaleDateString('pt-BR')}</p>
               </div>
               {user.shareCode && (
                 <div>
@@ -211,8 +211,8 @@ export default function ProfilePage() {
               <Label htmlFor="nome">Nome</Label>
               <Input
                 id="nome"
-                value={formData.nome}
-                onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 disabled={!editMode}
               />
             </div>
@@ -234,7 +234,7 @@ export default function ProfilePage() {
                   <Button onClick={handleUpdateProfile} disabled={loading}>
                     {loading ? 'Salvando...' : 'Salvar'}
                   </Button>
-                  <Button variant="outline" onClick={() => { setEditMode(false); setFormData({ nome: user.nome, email: user.email }) }}>
+                  <Button variant="outline" onClick={() => { setEditMode(false); setFormData({ name: user.name, email: user.email }) }}>
                     Cancelar
                   </Button>
                 </>

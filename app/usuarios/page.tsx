@@ -38,9 +38,9 @@ export default function UsersPage() {
       const data = await usersAPI.getAll()
       const mapped = data.map((item: any) => ({
         id: item.id,
-        name: item.nome,
+        name: item.name,
         email: item.email,
-        type: item.ativo ? 'admin' : 'usuario',
+        type: item.ative ? 'admin' : 'usuario',
       }))
       setUsers(mapped)
     } catch (error) {

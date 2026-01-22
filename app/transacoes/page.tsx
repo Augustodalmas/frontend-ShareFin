@@ -37,13 +37,13 @@ export default function TransactionsPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingTransaction, setEditingTransaction] = useState<Transaction | undefined>()
   const [filters, setFilters] = useState({
-    conta: '',
-    categoria: '',
-    usuario: '',
-    obs: '',
-    tipo: 'all',
-    data_transacao_low: '',
-    data_transacao_high: new Date().toISOString().split('T')[0],
+    account: '',
+    category: '',
+    user: '',
+    name: '',
+    type: 'all',
+    date_transaction_low: '',
+    date_transaction_high: new Date().toISOString().split('T')[0],
   })
   const { toast } = useToast()
 
@@ -53,13 +53,13 @@ export default function TransactionsPage() {
       setFilters(JSON.parse(savedFilters))
     } else {
       const defaultFilters = {
-        conta: '',
-        categoria: '',
-        usuario: '',
-        obs: '',
-        tipo: 'all',
-        data_transacao_low: '',
-        data_transacao_high: new Date().toISOString().split('T')[0],
+        account: '',
+        category: '',
+        user: '',
+        name: '',
+        type: 'all',
+        date_transaction_low: '',
+        date_transaction_high: new Date().toISOString().split('T')[0],
       }
       setFilters(defaultFilters)
     }
@@ -128,14 +128,14 @@ export default function TransactionsPage() {
 
       setViewTransaction({
         id: data.id,
-        name: data.obs || "Sem descrição",
-        type: data.valor > 0 ? "entrada" : "saida",
-        category: data.categoria,
-        categoryId: data.categoria_id,
-        account: data.conta,
-        accountId: data.conta_id,
-        amount: Math.abs(data.valor),
-        date: data.data_transacao.split("T")[0],
+        name: data.name || "Sem descrição",
+        type: data.value > 0 ? "entrada" : "saida",
+        category: data.category,
+        categoryId: data.category_id,
+        account: data.account,
+        accountId: data.account_id,
+        amount: Math.abs(data.value),
+        date: data.date_transaction.split("T")[0],
       })
 
       setViewOpen(true)
@@ -151,39 +151,39 @@ export default function TransactionsPage() {
   const loadTransactions = async () => {
     try {
       const params: any = {}
-      if (filters.conta) params.conta = filters.conta
-      if (filters.categoria) params.categoria = filters.categoria
-      if (filters.usuario) params.usuario = filters.usuario
-      if (filters.obs) params.obs = filters.obs
-      if (filters.data_transacao_low) params.data_transacao_low = filters.data_transacao_low
-      if (filters.data_transacao_high) params.data_transacao_high = filters.data_transacao_high
+      if (filters.account) params.account = filters.account
+      if (filters.category) params.category = filters.category
+      if (filters.user) params.user = filters.user
+      if (filters.user) params.user = filters.user
+      if (filters.date_transaction_low) params.date_transaction_low = filters.date_transaction_low
+      if (filters.date_transaction_high) params.date_transaction_high = filters.date_transaction_high
 
       const data = await transactionsAPI.getAll(Object.keys(params).length > 0 ? params : undefined)
 
-      let transactionsList = Array.isArray(data) ? data : (data.resultado || [])
+      let transactionsList = Array.isArray(data) ? data : (data.result || [])
 
       const mapped = transactionsList.map((item: any) => {
-        const category = categories.find((c: any) => c.nome === item.categoria)
-        const account = accounts.find((a: any) => a.nome === item.conta)
+        const category = categories.find((c: any) => c.nome === item.category)
+        const account = accounts.find((a: any) => a.nome === item.account)
 
         return {
           id: item.id,
-          name: item.obs || "Sem descrição",
-          type: item.valor > 0 ? "entrada" : "saida",
-          category: item.categoria || "Sem categoria",
+          name: item.name || "Sem descrição",
+          type: item.value > 0 ? "entrada" : "saida",
+          category: item.category || "Sem categoria",
           categoryId: category?.id || 0,
-          account: item.conta || "Sem conta",
+          account: item.account || "Sem conta",
           accountId: account?.id || 0,
-          amount: Math.abs(item.valor),
-          date: item.data_transacao
-            ? item.data_transacao.split("T")[0]
+          amount: Math.abs(item.value),
+          date: item.date_transaction
+            ? item.date_transaction.split("T")[0]
             : "",
         }
       })
 
-      const filtered = filters.tipo === 'all'
+      const filtered = filters.type === 'all'
         ? mapped
-        : mapped.filter((t: Transaction) => t.type === filters.tipo)
+        : mapped.filter((t: Transaction) => t.type === filters.type)
 
       setTransactions(filtered)
     } catch (error) {
@@ -203,14 +203,15 @@ export default function TransactionsPage() {
       if (!userId && !("id" in transactionData)) {
         throw new Error("User ID not found in token. Please login again.")
       }
+      console.log(transactionData)
 
       if (transactionData.id) {
         const updatePayload = {
-          conta: Number.parseInt(transactionData.account),
-          categoria: Number.parseInt(transactionData.category),
-          valor: transactionData.type === "entrada" ? transactionData.amount : -transactionData.amount,
-          obs: transactionData.name,
-          data_transacao: transactionData.date,
+          account: Number.parseInt(transactionData.account),
+          category: Number.parseInt(transactionData.category),
+          value: transactionData.type === "entrada" ? transactionData.amount : -transactionData.amount,
+          name: transactionData.name,
+          date_transaction: transactionData.date,
         }
         await transactionsAPI.update(transactionData.id, updatePayload)
         toast({
@@ -220,11 +221,11 @@ export default function TransactionsPage() {
       } else {
         const createPayload = {
           user: userId,
-          conta: Number.parseInt(transactionData.account),
-          categoria: Number.parseInt(transactionData.category),
-          valor: transactionData.type === "entrada" ? transactionData.amount : -transactionData.amount,
-          obs: transactionData.name,
-          data_transacao: transactionData.date,
+          account: Number.parseInt(transactionData.account),
+          category: Number.parseInt(transactionData.category),
+          value: transactionData.type === "entrada" ? transactionData.amount : -transactionData.amount,
+          name: transactionData.name,
+          date_transaction: transactionData.date,
         }
         await transactionsAPI.create(createPayload)
 
@@ -289,17 +290,17 @@ export default function TransactionsPage() {
 
   const clearFilters = () => {
     setFilters({
-      conta: '',
-      categoria: '',
-      usuario: '',
-      obs: '',
-      tipo: 'all',
-      data_transacao_low: '',
-      data_transacao_high: new Date().toISOString().split('T')[0],
+      account: '',
+      category: '',
+      user: '',
+      name: '',
+      type: 'all',
+      date_transaction_low: '',
+      date_transaction_high: new Date().toISOString().split('T')[0],
     })
   }
 
-  const hasActiveFilters = filters.conta || filters.categoria || filters.usuario || filters.obs || filters.tipo !== 'all'
+  const hasActiveFilters = filters.account || filters.category || filters.user || filters.name || filters.type !== 'all'
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -399,8 +400,8 @@ export default function TransactionsPage() {
             <span className="text-sm font-medium text-muted-foreground">Tipo:</span>
             <div className="inline-flex rounded-lg border border-border bg-card p-1 flex-1">
               <button
-                onClick={() => setFilters({ ...filters, tipo: 'all' })}
-                className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${filters.tipo === 'all'
+                onClick={() => setFilters({ ...filters, type: 'all' })}
+                className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${filters.type === 'all'
                   ? 'bg-primary text-primary-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
                   }`}
@@ -408,8 +409,8 @@ export default function TransactionsPage() {
                 Todas
               </button>
               <button
-                onClick={() => setFilters({ ...filters, tipo: 'saida' })}
-                className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${filters.tipo === 'saida'
+                onClick={() => setFilters({ ...filters, type: 'saida' })}
+                className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${filters.type === 'saida'
                   ? 'bg-primary text-primary-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
                   }`}
@@ -417,8 +418,8 @@ export default function TransactionsPage() {
                 Despesas
               </button>
               <button
-                onClick={() => setFilters({ ...filters, tipo: 'entrada' })}
-                className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${filters.tipo === 'entrada'
+                onClick={() => setFilters({ ...filters, type: 'entrada' })}
+                className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${filters.type === 'entrada'
                   ? 'bg-primary text-primary-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
                   }`}
@@ -430,43 +431,43 @@ export default function TransactionsPage() {
 
           <input
             type="date"
-            value={filters.data_transacao_low}
-            onChange={(e) => setFilters({ ...filters, data_transacao_low: e.target.value })}
+            value={filters.date_transaction_low}
+            onChange={(e) => setFilters({ ...filters, date_transaction_low: e.target.value })}
             className="w-full px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             placeholder="Data inicial"
           />
 
           <input
             type="date"
-            value={filters.data_transacao_high}
-            onChange={(e) => setFilters({ ...filters, data_transacao_high: e.target.value })}
+            value={filters.date_transaction_high}
+            onChange={(e) => setFilters({ ...filters, date_transaction_high: e.target.value })}
             max={new Date().toISOString().split('T')[0]}
             className="w-full px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             placeholder="Data final"
           />
 
           <select
-            value={filters.conta}
-            onChange={(e) => setFilters({ ...filters, conta: e.target.value })}
+            value={filters.account}
+            onChange={(e) => setFilters({ ...filters, account: e.target.value })}
             className="w-full px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
           >
             <option value="">Todas as contas</option>
             {accounts.map((account) => (
-              <option key={account.id} value={account.nome}>
-                {account.nome}
+              <option key={account.id} value={account.name}>
+                {account.name}
               </option>
             ))}
           </select>
 
           <select
-            value={filters.categoria}
-            onChange={(e) => setFilters({ ...filters, categoria: e.target.value })}
+            value={filters.category}
+            onChange={(e) => setFilters({ ...filters, category: e.target.value })}
             className="w-full px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
           >
             <option value="">Todas as categorias</option>
             {categories.map((category) => (
-              <option key={category.id} value={category.nome}>
-                {category.nome}
+              <option key={category.id} value={category.name}>
+                {category.name}
               </option>
             ))}
           </select>
@@ -474,16 +475,16 @@ export default function TransactionsPage() {
           <input
             type="text"
             placeholder="Filtrar por usuário..."
-            value={filters.usuario}
-            onChange={(e) => setFilters({ ...filters, usuario: e.target.value })}
+            value={filters.user}
+            onChange={(e) => setFilters({ ...filters, user: e.target.value })}
             className="w-full px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
 
           <input
             type="text"
             placeholder="Filtrar por descrição..."
-            value={filters.obs}
-            onChange={(e) => setFilters({ ...filters, obs: e.target.value })}
+            value={filters.name}
+            onChange={(e) => setFilters({ ...filters, name: e.target.value })}
             className="w-full px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
         </MobileFilters>
@@ -493,8 +494,8 @@ export default function TransactionsPage() {
             <span className="text-sm font-medium text-muted-foreground">Tipo:</span>
             <div className="inline-flex rounded-lg border border-border bg-card p-1">
               <button
-                onClick={() => setFilters({ ...filters, tipo: 'all' })}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${filters.tipo === 'all'
+                onClick={() => setFilters({ ...filters, type: 'all' })}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${filters.type === 'all'
                   ? 'bg-primary text-primary-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
                   }`}
@@ -502,8 +503,8 @@ export default function TransactionsPage() {
                 Todas
               </button>
               <button
-                onClick={() => setFilters({ ...filters, tipo: 'saida' })}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${filters.tipo === 'saida'
+                onClick={() => setFilters({ ...filters, type: 'saida' })}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${filters.type === 'saida'
                   ? 'bg-primary text-primary-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
                   }`}
@@ -511,8 +512,8 @@ export default function TransactionsPage() {
                 Despesas
               </button>
               <button
-                onClick={() => setFilters({ ...filters, tipo: 'entrada' })}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${filters.tipo === 'entrada'
+                onClick={() => setFilters({ ...filters, type: 'entrada' })}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${filters.type === 'entrada'
                   ? 'bg-primary text-primary-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
                   }`}
@@ -525,43 +526,43 @@ export default function TransactionsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <input
               type="date"
-              value={filters.data_transacao_low}
-              onChange={(e) => setFilters({ ...filters, data_transacao_low: e.target.value })}
+              value={filters.date_transaction_low}
+              onChange={(e) => setFilters({ ...filters, date_transaction_low: e.target.value })}
               className="px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Data inicial"
             />
 
             <input
               type="date"
-              value={filters.data_transacao_high}
-              onChange={(e) => setFilters({ ...filters, data_transacao_high: e.target.value })}
+              value={filters.date_transaction_high}
+              onChange={(e) => setFilters({ ...filters, date_transaction_high: e.target.value })}
               max={new Date().toISOString().split('T')[0]}
               className="px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Data final"
             />
 
             <select
-              value={filters.conta}
-              onChange={(e) => setFilters({ ...filters, conta: e.target.value })}
+              value={filters.account}
+              onChange={(e) => setFilters({ ...filters, account: e.target.value })}
               className="px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
             >
               <option value="">Todas as contas</option>
               {accounts.map((account) => (
-                <option key={account.id} value={account.nome}>
-                  {account.nome}
+                <option key={account.id} value={account.name}>
+                  {account.name}
                 </option>
               ))}
             </select>
 
             <select
-              value={filters.categoria}
-              onChange={(e) => setFilters({ ...filters, categoria: e.target.value })}
+              value={filters.category}
+              onChange={(e) => setFilters({ ...filters, category: e.target.value })}
               className="px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
             >
               <option value="">Todas as categorias</option>
               {categories.map((category) => (
-                <option key={category.id} value={category.nome}>
-                  {category.nome}
+                <option key={category.id} value={category.name}>
+                  {category.name}
                 </option>
               ))}
             </select>
@@ -569,16 +570,16 @@ export default function TransactionsPage() {
             <input
               type="text"
               placeholder="Filtrar por usuário..."
-              value={filters.usuario}
-              onChange={(e) => setFilters({ ...filters, usuario: e.target.value })}
+              value={filters.user}
+              onChange={(e) => setFilters({ ...filters, user: e.target.value })}
               className="px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
 
             <input
               type="text"
               placeholder="Filtrar por descrição..."
-              value={filters.obs}
-              onChange={(e) => setFilters({ ...filters, obs: e.target.value })}
+              value={filters.name}
+              onChange={(e) => setFilters({ ...filters, name: e.target.value })}
               className="px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>

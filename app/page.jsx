@@ -44,17 +44,16 @@ export default function DashboardPage() {
   const loadDashboardData = async () => {
     try {
       const { start, end } = getDateRange()
-      const data_transacao_low = start.toISOString().split('T')[0]
-      const data_transacao_high = end.toISOString().split('T')[0]
+      const date_transaction_low = start.toISOString().split('T')[0]
+      const date_transaction_high = end.toISOString().split('T')[0]
 
       const dashboardParams = {
-        data_transacao_low,
-        data_transacao_high,
+        date_transaction_low,
+        date_transaction_high,
       }
 
-      // 👉 só envia conta se NÃO for "all"
       if (selectedAccount !== "all") {
-        dashboardParams.conta = selectedAccount
+        dashboardParams.account = selectedAccount
       }
 
       const [dashboardStats, accountsData, categories] = await Promise.all([
@@ -220,8 +219,8 @@ export default function DashboardPage() {
             >
               <option value="all">Todas as contas</option>
               {accounts.map((account) => (
-                <option key={account.id} value={account.nome}>
-                  {account.nome}
+                <option key={account.id} value={account.name}>
+                  {account.name}
                 </option>
               ))}
             </select>
