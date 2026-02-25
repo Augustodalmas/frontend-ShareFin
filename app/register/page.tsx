@@ -34,10 +34,9 @@ export default function RegisterPage() {
 
     try {
       await usersAPI.create({
-        nome,
+        name: nome,
         email,
-        senha,
-        is_admin: false
+        password: senha
       })
       alert('Conta criada com sucesso! Confirme sua conta em seu email para continuar.')
       router.push('/login')

@@ -54,7 +54,7 @@ export default function UsersPage() {
   const handleSave = async (userData: Omit<User, 'id'> | User) => {
     try {
       const payload = {
-        nome: userData.name,
+        name: userData.name,
         email: userData.email,
         ativo: userData.type === 'admin' ? 1 : 0,
       }
