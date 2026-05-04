@@ -2,17 +2,20 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { authAPI } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
+import { Eye, EyeOff } from 'lucide-react'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,13 +35,16 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md p-8">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-foreground">Login</h1>
-          <p className="mt-2 text-muted-foreground">Entre com suas credenciais</p>
+      <Card className="w-full max-w-md p-6 sm:p-8">
+        <div className="mb-6 sm:mb-8 text-center">
+          <img src="/logo-sharefin-bg.png" alt="ShareFin Logo" className="h-20 w-20 mx-auto mb-4" />
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+            ShareFin <span className="text-sm text-muted-foreground font-normal">v0.0.1</span>
+          </h1>
+          <p className="mt-2 text-sm sm:text-base text-muted-foreground">Entre com suas credenciais</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -53,14 +59,25 @@ export default function LoginPage() {
 
           <div className="space-y-2">
             <Label htmlFor="senha">Senha</Label>
-            <Input
-              id="senha"
-              type="password"
-              value={senha}
-              onChange={(e) => setSenha(e.target.value)}
-              placeholder="••••••••"
-              required
-            />
+            <div className="relative">
+              <Input
+                id="senha"
+                type={showPassword ? "text" : "password"}
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+                placeholder="••••••••"
+                required
+                autoComplete="off"
+                className="pr-10 [&::-ms-reveal]:hidden [&::-ms-clear]:hidden"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
           </div>
 
           {error && (
@@ -72,6 +89,13 @@ export default function LoginPage() {
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? 'Entrando...' : 'Entrar'}
           </Button>
+
+          <div className="text-center text-sm text-muted-foreground">
+            Não tem uma conta?{' '}
+            <Link href="/register" className="text-primary hover:underline">
+              Cadastre-se
+            </Link>
+          </div>
         </form>
       </Card>
     </div>

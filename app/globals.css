@@ -1,5 +1,5 @@
-@import 'tailwindcss';
-@import 'tw-animate-css';
+@import "tailwindcss";
+@import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -16,19 +16,19 @@
   --secondary: oklch(0.96 0.005 240);
   --secondary-foreground: oklch(0.15 0 0);
   --muted: oklch(0.97 0.005 240);
-  --muted-foreground: oklch(0.50 0 0);
+  --muted-foreground: oklch(0.5 0 0);
   --accent: oklch(0.94 0.01 240);
   --accent-foreground: oklch(0.15 0 0);
-  --destructive: oklch(0.55 0.20 25);
+  --destructive: oklch(0.55 0.2 25);
   --destructive-foreground: oklch(0.99 0 0);
   --border: oklch(0.92 0.005 240);
   --input: oklch(0.92 0.005 240);
   --ring: oklch(0.55 0.15 240);
   --chart-1: oklch(0.55 0.15 240);
   --chart-2: oklch(0.45 0.15 160);
-  --chart-3: oklch(0.60 0.15 300);
-  --chart-4: oklch(0.65 0.10 60);
-  --chart-5: oklch(0.50 0.15 20);
+  --chart-3: oklch(0.6 0.15 300);
+  --chart-4: oklch(0.65 0.1 60);
+  --chart-5: oklch(0.5 0.15 20);
   --radius: 0.5rem;
   --sidebar: oklch(0.99 0 0);
   --sidebar-foreground: oklch(0.15 0 0);
@@ -47,37 +47,37 @@
   --card-foreground: oklch(0.96 0 0);
   --popover: oklch(0.15 0 0);
   --popover-foreground: oklch(0.96 0 0);
-  --primary: oklch(0.60 0.15 240);
+  --primary: oklch(0.6 0.15 240);
   --primary-foreground: oklch(0.12 0 0);
-  --secondary: oklch(0.20 0 0);
+  --secondary: oklch(0.2 0 0);
   --secondary-foreground: oklch(0.96 0 0);
-  --muted: oklch(0.20 0 0);
-  --muted-foreground: oklch(0.60 0 0);
+  --muted: oklch(0.2 0 0);
+  --muted-foreground: oklch(0.6 0 0);
   --accent: oklch(0.22 0 0);
   --accent-foreground: oklch(0.96 0 0);
-  --destructive: oklch(0.50 0.20 25);
+  --destructive: oklch(0.5 0.2 25);
   --destructive-foreground: oklch(0.96 0 0);
   --border: oklch(0.22 0 0);
   --input: oklch(0.22 0 0);
-  --ring: oklch(0.60 0.15 240);
-  --chart-1: oklch(0.60 0.15 240);
-  --chart-2: oklch(0.50 0.15 160);
+  --ring: oklch(0.6 0.15 240);
+  --chart-1: oklch(0.6 0.15 240);
+  --chart-2: oklch(0.5 0.15 160);
   --chart-3: oklch(0.65 0.15 300);
-  --chart-4: oklch(0.70 0.10 60);
+  --chart-4: oklch(0.7 0.1 60);
   --chart-5: oklch(0.55 0.15 20);
   --sidebar: oklch(0.15 0 0);
   --sidebar-foreground: oklch(0.96 0 0);
-  --sidebar-primary: oklch(0.60 0.15 240);
+  --sidebar-primary: oklch(0.6 0.15 240);
   --sidebar-primary-foreground: oklch(0.12 0 0);
-  --sidebar-accent: oklch(0.20 0 0);
+  --sidebar-accent: oklch(0.2 0 0);
   --sidebar-accent-foreground: oklch(0.96 0 0);
   --sidebar-border: oklch(0.22 0 0);
-  --sidebar-ring: oklch(0.60 0.15 240);
+  --sidebar-ring: oklch(0.6 0.15 240);
 }
 
 @theme inline {
-  --font-sans: 'Geist', 'Geist Fallback';
-  --font-mono: 'Geist Mono', 'Geist Mono Fallback';
+  --font-sans: "Geist", "Geist Fallback";
+  --font-mono: "Geist Mono", "Geist Mono Fallback";
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -123,4 +123,40 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* Improved focus states for keyboard navigation */
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
+  }
+}
+
+/* Melhorias de responsividade */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  /* Added smooth scrolling for better UX */
+  html {
+    scroll-behavior: smooth;
+  }
+  /* Improved text wrapping for titles */
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Esconder error overlay do Next.js */
+nextjs-portal {
+  display: none !important;
+}
+
+#__next-build-watcher {
+  display: none !important;
 }

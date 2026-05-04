@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { usersAPI } from '@/lib/api'
 
 const currencies = [
   { value: 'BRL', label: 'Real (BRL)' },
@@ -37,32 +38,49 @@ export function AccountDialog({ open, onOpenChange, account, onSave }) {
     currency: 'BRL',
     color: colors[0],
     active: true,
+    share: false,
+    sharewith: null,
   })
+  const [shareCode, setShareCode] = useState('')
 
   useEffect(() => {
-    if (account) {
-      setFormData({
-        name: account.name,
-        currency: account.currency,
-        color: account.color,
-        active: account.active,
-      })
-    } else {
-      setFormData({
-        name: '',
-        currency: 'BRL',
-        color: colors[0],
-        active: true,
-      })
+    if (open) {
+      if (account) {
+        setFormData({
+          name: account.name,
+          currency: account.currency,
+          color: account.color,
+          active: account.active,
+          share: account.share || false,
+          sharewith: account.sharewith || null,
+        })
+        setShareCode('')
+      } else {
+        setFormData({
+          name: '',
+          currency: 'BRL',
+          color: colors[0],
+          active: true,
+          share: false,
+          sharewith: null,
+        })
+        setShareCode('')
+      }
     }
   }, [account, open])
 
+
+
   const handleSubmit = (e) => {
     e.preventDefault()
+    const dataToSave = { ...formData }
+    if (formData.share && shareCode) {
+      dataToSave.shareCode = shareCode
+    }
     if (account) {
-      onSave({ ...formData, id: account.id })
+      onSave({ ...dataToSave, id: account.id })
     } else {
-      onSave(formData)
+      onSave(dataToSave)
     }
     onOpenChange(false)
   }
@@ -125,18 +143,37 @@ export function AccountDialog({ open, onOpenChange, account, onSave }) {
                 ))}
               </div>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3">
               <input
                 type="checkbox"
-                id="active"
-                checked={formData.active}
-                onChange={(e) =>
-                  setFormData({ ...formData, active: e.target.checked })
-                }
-                className="rounded"
+                id="share"
+                checked={formData.share}
+                onChange={(e) => {
+                  setFormData({ ...formData, share: e.target.checked })
+                  if (!e.target.checked) {
+                    setFormData({ ...formData, share: false, sharewith: null })
+                    setSelectedUserName('')
+                  }
+                }}
+                className="w-5 h-5 rounded cursor-pointer"
               />
-              <Label htmlFor="active">Conta ativa</Label>
+              <Label htmlFor="share" className="cursor-pointer text-sm sm:text-base">Conta compartilhada</Label>
             </div>
+            {formData.share && (
+              <div className="space-y-2">
+                <Label htmlFor="shareCode">Código de Compartilhamento</Label>
+                <Input
+                  id="shareCode"
+                  value={shareCode}
+                  onChange={(e) => setShareCode(e.target.value)}
+                  placeholder="Digite o código do usuário..."
+                  required={formData.share}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Insira o código de compartilhamento do usuário
+                </p>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button
