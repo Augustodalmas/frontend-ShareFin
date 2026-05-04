@@ -338,7 +338,7 @@ export default function TransactionsPage() {
     })
   }
 
-  const hasActiveFilters = filters.account || filters.category || filters.user || filters.name || filters.type !== 'all'
+  const hasActiveFilters = !!(filters.account || filters.category || filters.user || filters.name || filters.type !== 'all')
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
