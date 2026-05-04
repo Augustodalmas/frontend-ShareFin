@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button"
 import { Pencil, Trash2, FileX, Plus } from "lucide-react"
 
-export function DataTable({ data, columns, onRowClick, onEdit, onDelete, onAdd, addButtonText = "Adicionar", emptyMessage = "Nenhum registro encontrado", emptyDescription = "Adicione itens para começar a visualizar dados aqui" }) {
+export function DataTable({ data, columns, onRowClick = null, onEdit = null, onDelete = null, onAdd = null, addButtonText = "Adicionar", emptyMessage = "Nenhum registro encontrado", emptyDescription = "Adicione itens para começar a visualizar dados aqui" }) {
   return (
     <div className="rounded-lg border border-border bg-card overflow-hidden w-full shadow-sm">
       <div className="w-full overflow-x-auto">

@@ -97,10 +97,10 @@ export default function TransactionsPage() {
     const formData = new FormData()
     formData.append('file', file)
     const token = localStorage.getItem('token')
-    const csvUrl = `${process.env.NEXT_PUBLIC_API_URL || 'https://api-gerenciadorfinanceiro-production.up.railway.app/api/v1'}/transactions/import/csv`
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://api-gerenciadorfinanceiro-production.up.railway.app/api/v1'
 
     try {
-      const res = await fetch(csvUrl, {
+      const res = await fetch(`${apiBase}/transactions/import/csv`, {
         method: 'POST',
         headers: { ...(token && { 'Authorization': `Bearer ${token}` }) },
         body: formData,
