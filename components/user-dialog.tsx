@@ -30,7 +30,7 @@ interface UserDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   user?: User | null
-  onSave: (data: Partial<User>) => void
+  onSave: (data: any) => void
 }
 
 export function UserDialog({ open, onOpenChange, user, onSave }: UserDialogProps) {

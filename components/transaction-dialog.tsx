@@ -35,7 +35,7 @@ interface TransactionDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   transaction?: Transaction | null
-  onSave: (data: TransactionFormData & { id?: number | string; amount: number }) => void
+  onSave: (data: any) => void
 }
 
 export function TransactionDialog({ open, onOpenChange, transaction, onSave }: TransactionDialogProps) {

@@ -43,7 +43,7 @@ interface CategoryDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   category?: Category | null
-  onSave: (data: CategoryFormData & { id?: number | string }) => void
+  onSave: (data: any) => void
 }
 
 export function CategoryDialog({ open, onOpenChange, category, onSave }: CategoryDialogProps) {

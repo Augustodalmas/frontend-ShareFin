@@ -39,7 +39,7 @@ interface Account {
   color: string
   active: boolean
   share?: boolean
-  sharewith?: string | null
+  sharewith?: string | number | null
 }
 
 interface AccountFormData {
@@ -56,7 +56,7 @@ interface AccountDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   account?: Account | null
-  onSave: (data: AccountFormData & { id?: number | string }) => void
+  onSave: (data: any) => void
 }
 
 export function AccountDialog({ open, onOpenChange, account, onSave }: AccountDialogProps) {
@@ -79,7 +79,7 @@ export function AccountDialog({ open, onOpenChange, account, onSave }: AccountDi
           color: account.color,
           active: account.active,
           share: account.share || false,
-          sharewith: account.sharewith || null,
+          sharewith: account.sharewith != null ? String(account.sharewith) : null,
         })
         setShareCode('')
       } else {
@@ -179,7 +179,6 @@ export function AccountDialog({ open, onOpenChange, account, onSave }: AccountDi
                   setFormData({ ...formData, share: e.target.checked })
                   if (!e.target.checked) {
                     setFormData({ ...formData, share: false, sharewith: null })
-                    setSelectedUserName('')
                   }
                 }}
                 className="w-5 h-5 rounded cursor-pointer"
