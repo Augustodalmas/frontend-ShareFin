@@ -19,14 +19,28 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
-export function UserDialog({ open, onOpenChange, user, onSave }) {
+interface User {
+  id: number | string
+  name: string
+  email: string
+  type: string
+}
+
+interface UserDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  user?: User | null
+  onSave: (data: Partial<User>) => void
+}
+
+export function UserDialog({ open, onOpenChange, user, onSave }: UserDialogProps) {
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
     type: user?.type || 'usuario',
   })
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (user) {
       onSave({ ...formData, id: user.id })

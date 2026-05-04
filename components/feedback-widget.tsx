@@ -19,7 +19,12 @@ import {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api-gerenciadorfinanceiro-production.up.railway.app/api/v1'
 
-export function FeedbackWidget({ open, onOpenChange }) {
+interface FeedbackWidgetProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
+
+export function FeedbackWidget({ open, onOpenChange }: FeedbackWidgetProps) {
   const [titulo, setTitulo] = useState('')
   const [descricao, setDescricao] = useState('')
   const [loading, setLoading] = useState(false)
@@ -34,7 +39,7 @@ export function FeedbackWidget({ open, onOpenChange }) {
     setFeedbackError('')
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setLoading(true)
 
@@ -57,7 +62,7 @@ export function FeedbackWidget({ open, onOpenChange }) {
       setSuccess(true)
       setTimeout(handleClose, 2000)
     } catch (error) {
-      setFeedbackError(error.message || 'Erro ao enviar feedback. Tente novamente.')
+      setFeedbackError((error as Error).message || 'Erro ao enviar feedback. Tente novamente.')
     } finally {
       setLoading(false)
     }

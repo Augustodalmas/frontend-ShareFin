@@ -32,8 +32,35 @@ const colors = [
   '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'
 ]
 
-export function AccountDialog({ open, onOpenChange, account, onSave }) {
-  const [formData, setFormData] = useState({
+interface Account {
+  id: number | string
+  name: string
+  currency: string
+  color: string
+  active: boolean
+  share?: boolean
+  sharewith?: string | null
+}
+
+interface AccountFormData {
+  name: string
+  currency: string
+  color: string
+  active: boolean
+  share: boolean
+  sharewith: string | null
+  shareCode?: string
+}
+
+interface AccountDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  account?: Account | null
+  onSave: (data: AccountFormData & { id?: number | string }) => void
+}
+
+export function AccountDialog({ open, onOpenChange, account, onSave }: AccountDialogProps) {
+  const [formData, setFormData] = useState<AccountFormData>({
     name: '',
     currency: 'BRL',
     color: colors[0],
@@ -71,9 +98,9 @@ export function AccountDialog({ open, onOpenChange, account, onSave }) {
 
 
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const dataToSave = { ...formData }
+    const dataToSave: AccountFormData = { ...formData }
     if (formData.share && shareCode) {
       dataToSave.shareCode = shareCode
     }

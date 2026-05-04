@@ -12,8 +12,34 @@ import { getIconComponent, IconPicker } from "@/components/icon-picker"
 
 const LAST_ACCOUNT_KEY = "sharefin_last_account"
 
-export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
-  const [formData, setFormData] = useState({
+interface Transaction {
+  id: number | string
+  name?: string
+  type?: string
+  categoryId?: number | string
+  accountId?: number | string
+  amount?: number | string
+  date?: string
+}
+
+interface TransactionFormData {
+  amount: string
+  type: string
+  category: string
+  account: string
+  date: string
+  name: string
+}
+
+interface TransactionDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  transaction?: Transaction | null
+  onSave: (data: TransactionFormData & { id?: number | string; amount: number }) => void
+}
+
+export function TransactionDialog({ open, onOpenChange, transaction, onSave }: TransactionDialogProps) {
+  const [formData, setFormData] = useState<TransactionFormData>({
     amount: "",
     type: "saida",
     category: "",
@@ -22,8 +48,8 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
     name: "",
   })
 
-  const [categories, setCategories] = useState([])
-  const [accounts, setAccounts] = useState([])
+  const [categories, setCategories] = useState<any[]>([])
+  const [accounts, setAccounts] = useState<any[]>([])
   const [formError, setFormError] = useState("")
   const [categoryError, setCategoryError] = useState("")
   const [accountError, setAccountError] = useState("")
@@ -50,7 +76,7 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
         type: transaction.type || "saida",
         category: transaction.categoryId?.toString() || "",
         account: transaction.accountId?.toString() || "",
-        amount: transaction.amount || "",
+        amount: transaction.amount?.toString() || "",
         date: transaction.date || new Date().toISOString().split("T")[0],
       })
     } else {
@@ -70,14 +96,14 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
   }, [transaction, open])
 
   // Limpa a categoria quando o tipo muda para evitar categoria incompatível
-  const handleTypeChange = (newType) => {
+  const handleTypeChange = (newType: string) => {
     setFormData((prev) => ({ ...prev, type: newType, category: "" }))
   }
 
   const loadCategories = async () => {
     try {
       const data = await categoriesAPI.getAll()
-      setCategories(data.map((item) => ({ ...item, type: Number.parseInt(item.type) })))
+      setCategories(data.map((item: any) => ({ ...item, type: Number.parseInt(item.type) })))
     } catch (error) {
       console.error("Erro ao carregar categorias:", error)
     }
@@ -92,7 +118,7 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
     }
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setFormError("")
 
@@ -133,10 +159,10 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
         icon: newCategory.icon,
       })
       const updatedCategories = await categoriesAPI.getAll()
-      const mapped = updatedCategories.map((item) => ({ ...item, type: Number.parseInt(item.type) }))
+      const mapped = updatedCategories.map((item: any) => ({ ...item, type: Number.parseInt(item.type) }))
       setCategories(mapped)
 
-      const created = mapped.find((c) => c.name === newCategory.name)
+      const created = mapped.find((c: any) => c.name === newCategory.name)
       if (created) {
         const newType = created.type === 1 ? "saida" : "entrada"
         setFormData({ ...formData, category: created.id.toString(), type: newType })
@@ -169,7 +195,7 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
       const updatedAccounts = await accountsAPI.getAll()
       setAccounts(updatedAccounts)
 
-      const created = updatedAccounts.find((a) => a.name === newAccount.name)
+      const created = updatedAccounts.find((a: any) => a.name === newAccount.name)
       if (created) {
         setFormData({ ...formData, account: created.id.toString() })
         localStorage.setItem(LAST_ACCOUNT_KEY, created.id.toString())
@@ -178,7 +204,7 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
       setShowAccountDialog(false)
       setNewAccount({ name: "", currency: "BRL", color: "#3b82f6" })
     } catch (error) {
-      setAccountError("Erro ao criar conta: " + error.message)
+      setAccountError("Erro ao criar conta: " + (error as Error).message)
     }
   }
 
