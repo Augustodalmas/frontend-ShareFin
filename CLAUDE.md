@@ -6,23 +6,26 @@ Next.js 16 + React 19 + TypeScript. App Router. Tailwind CSS + shadcn/ui.
 
 ```
 app/
-  page.jsx              # Dashboard (gráficos, saldo, filtros de período/conta)
-  transacoes/page.tsx   # CRUD de transações + importação CSV Nubank
-  contas/page.tsx       # Gerenciamento de contas bancárias
-  categorias/page.tsx   # Gerenciamento de categorias
-  recorrencias/page.tsx # Transações recorrentes
+  page.jsx                  # Dashboard (gráficos, saldo, filtros de período/conta)
+  transacoes/page.tsx        # CRUD de transações + importação CSV Nubank
+  contas/page.tsx            # Gerenciamento de contas bancárias
+  categorias/page.tsx        # Gerenciamento de categorias
+  recorrencias/page.tsx      # Transações recorrentes
   compartilhadas/page.tsx
   perfil/page.tsx
-  usuarios/page.tsx     # Admin only
+  usuarios/page.tsx          # Admin only
+  confirmar-email/page.tsx   # Página de confirmação de email (pública)
 components/
   transaction-dialog.jsx  # Modal de criar/editar transação
   global-fab.tsx          # Botão flutuante de nova transação (presente em todas as telas)
-  sidebar.jsx
+  confirm-dialog.tsx      # Dialog de confirmação reutilizável (substitui confirm() nativo)
+  sidebar.jsx             # Inclui o link de Feedback no rodapé
   data-table.jsx
-  feedback-widget.jsx
+  feedback-widget.jsx     # Dialog de feedback (controlado por props open/onOpenChange)
+  ui/alert-dialog.tsx     # Componente AlertDialog baseado em Radix UI
 lib/
-  api.ts                # Cliente HTTP centralizado + helpers de token
-middleware.ts           # Redirect para /login se não autenticado
+  api.ts                  # Cliente HTTP centralizado + helpers de token
+middleware.ts             # Redirect para /login se não autenticado (libera /confirmar-email)
 ```
 
 ## Integração com a API
@@ -31,10 +34,10 @@ Base URL via `NEXT_PUBLIC_API_URL` (`.env.local`). O cliente em `lib/api.ts` inj
 
 Formato de criação de transação enviado ao backend:
 ```ts
-{ user, account, category, value, name, date_transaction }
+{ account, category, value, name, date_transaction }
 ```
 
-`value` negativo = despesa, positivo = receita. `name` é opcional. O tipo visual (entrada/saída) é derivado do sinal do valor.
+`value` negativo = despesa, positivo = receita. `name` é opcional. O tipo visual (entrada/saída) é derivado do sinal do valor. O campo `user` **não é enviado** — o backend extrai o usuário do JWT.
 
 ## Componentes principais
 
@@ -52,8 +55,36 @@ Dialog de criar/editar transação. Ordem dos campos:
 
 A última conta usada é persistida em `localStorage` sob a chave `sharefin_last_account`.
 
+### ConfirmDialog (`components/confirm-dialog.tsx`)
+Dialog de confirmação reutilizável baseado em `AlertDialog` do Radix UI. Substitui todos os `confirm()` nativos do navegador. Aceita `open`, `title`, `description`, `confirmLabel`, `cancelLabel`, `onConfirm` e `onCancel`. O botão de confirmar usa a variante `destructive`.
+
+### FeedbackWidget (`components/feedback-widget.jsx`)
+Dialog de envio de feedback. Controlado externamente via props `open` e `onOpenChange` — não possui botão flutuante próprio. É aberto pelo link "Feedback" no rodapé da sidebar.
+
 ### DataTable (`components/data-table.jsx`)
 Aceita props `emptyMessage` e `emptyDescription` para estado vazio contextual. Quando `data` está vazio e `onAdd` está definido, exibe o botão de adicionar em destaque no corpo da tabela.
+
+## Confirmação de email
+
+A rota `/confirmar-email?token=TOKEN` é a página que o backend deve apontar nos emails de confirmação. Ela chama `GET /api/v1/usuario/confirm/:token` e exibe estados visuais de carregando, sucesso, erro e link inválido. A rota é pública (não exige autenticação no middleware).
+
+## Validação de senha (cadastro)
+
+O formulário de registro valida a senha em tempo real antes de submeter:
+- Mínimo 8 caracteres
+- Pelo menos uma letra
+- Pelo menos um número
+- Pelo menos uma letra maiúscula
+- Pelo menos um caractere especial (`!@#$%^&*` etc.)
+
+Feedback visual por item aparece abaixo do campo enquanto o usuário digita.
+
+## Importação CSV Nubank
+
+Upload com autenticação, pré-visualização dos dados antes de salvar. Trata:
+- `200` — usa `data.result` como lista de drafts
+- `422` — exibe os erros por linha via toast
+- `429` — exibe mensagem de rate limit (10 importações/hora)
 
 ## Decisões de design importantes
 
@@ -62,6 +93,8 @@ Aceita props `emptyMessage` e `emptyDescription` para estado vazio contextual. Q
 - **Onboarding zero-config**: novo usuário já tem categorias e conta padrão criadas pelo backend — pode adicionar a primeira transação imediatamente
 - **FAB disponível em todas as telas**: o gesto mais frequente (nova transação) está a 1 toque de qualquer lugar do app
 - **Filtros de transação persistidos**: `localStorage` salva os filtros ativos entre sessões
+- **Feedback na sidebar**: o link de feedback fica no rodapé da sidebar (acima de "Sair") — evita sobreposição com o FAB
+- **Sem dialogs nativos**: todos os `confirm()` e `alert()` foram substituídos por `ConfirmDialog` e toasts
 - **Metas e Assistente ocultos**: itens comentados no menu da sidebar até serem implementados
 - **Recorrências ocultas**: também comentada no menu — página existe mas ainda não integrada ao fluxo principal
 
@@ -72,6 +105,7 @@ Aceita props `emptyMessage` e `emptyDescription` para estado vazio contextual. Q
 - **Responsividade**: layout sidebar + `MobileFilters` adaptado para mobile com rota `dev:mobile` para testes em rede local
 - **Dashboard completo**: gráficos de pizza por categoria, barchart dos últimos 6 meses, saldo do período, filtros em tempo real — uma única chamada à API
 - **Importação CSV Nubank**: upload com autenticação, pré-visualização dos dados antes de salvar, type inferido automaticamente
+- **Página de confirmação de email**: design do ShareFin em vez de resposta JSON crua da API
 
 ## Melhorias para pós-lançamento
 
