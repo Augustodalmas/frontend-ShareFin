@@ -5,12 +5,12 @@ import { Sidebar } from '@/components/sidebar'
 import { PageHeader } from '@/components/page-header'
 import { DataTable } from '@/components/data-table'
 import { AccountDialog } from '@/components/account-dialog'
-import { FeedbackWidget } from '@/components/feedback-widget'
 import { MobileFilters } from '@/components/mobile-filters'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import { accountsAPI, getUserIdFromToken } from '@/lib/api'
 import { useToast } from '@/hooks/use-toast'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 
 interface BankAccount {
   id: number
@@ -70,6 +70,8 @@ export default function AccountsPage() {
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingAccount, setEditingAccount] = useState<BankAccount | undefined>()
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [accountToDelete, setAccountToDelete] = useState<BankAccount | null>(null)
 
   const handleSave = async (accountData: any) => {
     try {
@@ -109,11 +111,14 @@ export default function AccountsPage() {
       await loadAccounts()
       setEditingAccount(undefined)
       setDialogOpen(false)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao salvar conta:', error)
+      const isInvalidShareCode = error?.message?.toLowerCase().includes('compartilhamento') || error?.message?.includes('404')
       toast({
         title: "Erro ao salvar",
-        description: "Não foi possível salvar a conta. Tente novamente.",
+        description: isInvalidShareCode
+          ? "Código de compartilhamento não encontrado. Verifique e tente novamente."
+          : "Não foi possível salvar a conta. Tente novamente.",
         variant: "destructive",
       })
     }
@@ -124,23 +129,23 @@ export default function AccountsPage() {
     setDialogOpen(true)
   }
 
-  const handleDelete = async (account: BankAccount) => {
-    if (confirm('Tem certeza que deseja excluir esta conta?')) {
-      try {
-        await accountsAPI.delete(account.id)
-        toast({
-          title: "Conta excluída",
-          description: "A conta foi excluída com sucesso.",
-        })
-        await loadAccounts()
-      } catch (error) {
-        console.error('Erro ao excluir conta:', error)
-        toast({
-          title: "Erro ao excluir",
-          description: "Não foi possível excluir a conta. Tente novamente.",
-          variant: "destructive",
-        })
-      }
+  const handleDelete = (account: BankAccount) => {
+    setAccountToDelete(account)
+    setConfirmOpen(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!accountToDelete) return
+    setConfirmOpen(false)
+    try {
+      await accountsAPI.delete(accountToDelete.id)
+      toast({ title: "Conta excluída", description: "A conta foi excluída com sucesso." })
+      await loadAccounts()
+    } catch (error) {
+      console.error('Erro ao excluir conta:', error)
+      toast({ title: "Erro ao excluir", description: "Não foi possível excluir a conta. Tente novamente.", variant: "destructive" })
+    } finally {
+      setAccountToDelete(null)
     }
   }
 
@@ -179,7 +184,6 @@ export default function AccountsPage() {
   return (
     <div className="flex min-h-screen overflow-x-hidden">
       <Sidebar />
-      <FeedbackWidget />
       <main className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-8 pt-20 lg:pt-8 max-w-full overflow-x-hidden">
         <PageHeader
           title="Contas Bancárias"
@@ -271,6 +275,8 @@ export default function AccountsPage() {
           onDelete={handleDelete}
           onAdd={handleAdd}
           addButtonText="Adicionar Conta"
+          emptyMessage="Nenhuma conta cadastrada"
+          emptyDescription="Crie sua primeira conta bancária para começar a registrar transações"
         />
 
         <AccountDialog
@@ -278,6 +284,15 @@ export default function AccountsPage() {
           onOpenChange={setDialogOpen}
           account={editingAccount}
           onSave={handleSave}
+        />
+
+        <ConfirmDialog
+          open={confirmOpen}
+          title="Excluir conta"
+          description={`Tem certeza que deseja excluir "${accountToDelete?.name}"? Esta ação não pode ser desfeita.`}
+          confirmLabel="Excluir"
+          onConfirm={confirmDelete}
+          onCancel={() => { setConfirmOpen(false); setAccountToDelete(null) }}
         />
       </main>
     </div>

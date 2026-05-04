@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button"
 import { Pencil, Trash2, FileX, Plus } from "lucide-react"
 
-export function DataTable({ data, columns, onRowClick, onEdit, onDelete, onAdd, addButtonText = "Adicionar" }) {
+export function DataTable({ data, columns, onRowClick, onEdit, onDelete, onAdd, addButtonText = "Adicionar", emptyMessage = "Nenhum registro encontrado", emptyDescription = "Adicione itens para começar a visualizar dados aqui" }) {
   return (
     <div className="rounded-lg border border-border bg-card overflow-hidden w-full shadow-sm">
       <div className="w-full overflow-x-auto">
@@ -36,13 +36,19 @@ export function DataTable({ data, columns, onRowClick, onEdit, onDelete, onAdd, 
             )}
             {data.length === 0 ? (
               <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={columns.length + (onEdit || onDelete ? 1 : 0)} className="h-32 text-center">
-                  <div className="flex flex-col items-center justify-center py-8 text-center">
-                    <FileX className="h-12 w-12 text-muted-foreground/50 mb-3" />
-                    <p className="text-muted-foreground font-medium">Nenhum registro encontrado</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Adicione itens para começar a visualizar dados aqui
-                    </p>
+                <TableCell colSpan={columns.length + (onEdit || onDelete ? 1 : 0)} className="h-40 text-center">
+                  <div className="flex flex-col items-center justify-center py-8 text-center gap-3">
+                    <FileX className="h-12 w-12 text-muted-foreground/50" />
+                    <div>
+                      <p className="text-muted-foreground font-medium">{emptyMessage}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{emptyDescription}</p>
+                    </div>
+                    {onAdd && (
+                      <Button size="sm" onClick={onAdd} className="mt-1">
+                        <Plus className="mr-2 h-4 w-4" />
+                        {addButtonText}
+                      </Button>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>

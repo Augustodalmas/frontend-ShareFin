@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
 import { Eye, EyeOff } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
 
 export default function RegisterPage() {
   const [nome, setNome] = useState('')
@@ -20,10 +21,26 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const router = useRouter()
+  const { toast } = useToast()
+
+  const validatePassword = (password: string): string | null => {
+    if (password.length < 8) return 'A senha deve ter pelo menos 8 caracteres'
+    if (!/[a-zA-Z]/.test(password)) return 'A senha deve conter pelo menos uma letra'
+    if (!/[0-9]/.test(password)) return 'A senha deve conter pelo menos um número'
+    if (!/[A-Z]/.test(password)) return 'A senha deve conter pelo menos uma letra maiúscula'
+    if (!/[!@#$%^&*()\-_=+\[\]{}|;':",.<>/?]/.test(password)) return 'A senha deve conter pelo menos um caractere especial'
+    return null
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+
+    const passwordError = validatePassword(senha)
+    if (passwordError) {
+      setError(passwordError)
+      return
+    }
 
     if (senha !== confirmSenha) {
       setError('As senhas não coincidem')
@@ -38,10 +55,14 @@ export default function RegisterPage() {
         email,
         password: senha
       })
-      alert('Conta criada com sucesso! Confirme sua conta em seu email para continuar.')
+      toast({
+        title: 'Conta criada com sucesso!',
+        description: 'Confirme sua conta pelo email enviado para continuar.',
+      })
       router.push('/login')
-    } catch (err) {
-      setError('Erro ao criar conta. Tente novamente.')
+    } catch (err: any) {
+      console.error('Erro ao criar usuário:', err)
+      setError(err?.message || 'Erro ao criar conta. Tente novamente.')
     } finally {
       setLoading(false)
     }
@@ -104,6 +125,20 @@ export default function RegisterPage() {
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
+            {senha && (
+              <ul className="text-xs space-y-0.5 mt-1">
+                {[
+                  { ok: senha.length >= 8, label: 'Mínimo 8 caracteres' },
+                  { ok: /[A-Z]/.test(senha), label: 'Pelo menos uma maiúscula' },
+                  { ok: /[0-9]/.test(senha), label: 'Pelo menos um número' },
+                  { ok: /[!@#$%^&*()\-_=+\[\]{}|;':",.<>/?]/.test(senha), label: 'Pelo menos um caractere especial' },
+                ].map(({ ok, label }) => (
+                  <li key={label} className={ok ? 'text-green-600' : 'text-muted-foreground'}>
+                    {ok ? '✓' : '○'} {label}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
           <div className="space-y-2">

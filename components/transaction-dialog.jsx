@@ -6,10 +6,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Plus } from "lucide-react"
-import { TrendingDown, TrendingUp } from "lucide-react"
+import { Plus, TrendingDown, TrendingUp } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { getIconComponent, IconPicker } from "@/components/icon-picker"
+
+const LAST_ACCOUNT_KEY = "sharefin_last_account"
 
 export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
   const [formData, setFormData] = useState({
@@ -17,18 +18,23 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
     type: "saida",
     category: "",
     account: "",
-    date: "",
+    date: new Date().toISOString().split("T")[0],
     name: "",
   })
 
   const [categories, setCategories] = useState([])
   const [accounts, setAccounts] = useState([])
+  const [formError, setFormError] = useState("")
   const [categoryError, setCategoryError] = useState("")
   const [accountError, setAccountError] = useState("")
   const [showCategoryDialog, setShowCategoryDialog] = useState(false)
   const [showAccountDialog, setShowAccountDialog] = useState(false)
-  const [newCategory, setNewCategory] = useState({ name: "", color: "#3b82f6", type: 1, icone: "ShoppingCart" })
+  const [newCategory, setNewCategory] = useState({ name: "", color: "#3b82f6", type: 1, icon: "ShoppingCart" })
   const [newAccount, setNewAccount] = useState({ name: "", currency: "BRL", color: "#3b82f6" })
+
+  const filteredCategories = categories.filter(
+    (c) => (formData.type === "saida" ? c.type === 1 : c.type === 2)
+  )
 
   useEffect(() => {
     if (open) {
@@ -40,33 +46,38 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
   useEffect(() => {
     if (transaction) {
       setFormData({
-        name: transaction.name,
-        type: transaction.type,
+        name: transaction.name || "",
+        type: transaction.type || "saida",
         category: transaction.categoryId?.toString() || "",
         account: transaction.accountId?.toString() || "",
-        amount: transaction.amount,
-        date: transaction.date,
+        amount: transaction.amount || "",
+        date: transaction.date || new Date().toISOString().split("T")[0],
       })
     } else {
+      const lastAccount = typeof window !== "undefined"
+        ? localStorage.getItem(LAST_ACCOUNT_KEY) || ""
+        : ""
       setFormData({
         name: "",
         type: "saida",
         category: "",
-        account: "",
+        account: lastAccount,
         amount: "",
         date: new Date().toISOString().split("T")[0],
       })
     }
+    setFormError("")
   }, [transaction, open])
+
+  // Limpa a categoria quando o tipo muda para evitar categoria incompatível
+  const handleTypeChange = (newType) => {
+    setFormData((prev) => ({ ...prev, type: newType, category: "" }))
+  }
 
   const loadCategories = async () => {
     try {
       const data = await categoriesAPI.getAll()
-      const mapped = data.map((item) => ({
-        ...item,
-        type: Number.parseInt(item.type),
-      }))
-      setCategories(mapped)
+      setCategories(data.map((item) => ({ ...item, type: Number.parseInt(item.type) })))
     } catch (error) {
       console.error("Erro ao carregar categorias:", error)
     }
@@ -83,31 +94,27 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
 
   const handleSubmit = (e) => {
     e.preventDefault()
+    setFormError("")
 
     if (!formData.amount || Number.parseFloat(formData.amount) <= 0) {
-      alert("Valor inválido. Por favor, insira um valor maior que zero.")
+      setFormError("Insira um valor maior que zero.")
       return
     }
-
     if (!formData.category) {
-      alert("Por favor, selecione uma categoria.")
+      setFormError("Selecione uma categoria.")
       return
     }
-
     if (!formData.account) {
-      alert("Por favor, selecione uma conta bancária.")
+      setFormError("Selecione uma conta bancária.")
       return
     }
 
-    const dataToSave = {
-      ...formData,
-      amount: Number.parseFloat(formData.amount) || 0,
+    if (typeof window !== "undefined") {
+      localStorage.setItem(LAST_ACCOUNT_KEY, formData.account)
     }
-    if (transaction) {
-      onSave({ ...dataToSave, id: transaction.id })
-    } else {
-      onSave(dataToSave)
-    }
+
+    const dataToSave = { ...formData, amount: Number.parseFloat(formData.amount) || 0 }
+    onSave(transaction ? { ...dataToSave, id: transaction.id } : dataToSave)
     onOpenChange(false)
   }
 
@@ -116,35 +123,28 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
       setCategoryError("Informe o nome da categoria")
       return
     }
-
     try {
-      setCategoryError("") // limpa erro anterior
-
-      const created = await categoriesAPI.create({
+      setCategoryError("")
+      await categoriesAPI.create({
         name: newCategory.name,
         color: newCategory.color,
         type: newCategory.type,
         initial_value: 0,
         icon: newCategory.icon,
       })
-
       const updatedCategories = await categoriesAPI.getAll()
-      const mapped = updatedCategories.map((item) => ({
-        ...item,
-        type: Number.parseInt(item.type),
-      }))
+      const mapped = updatedCategories.map((item) => ({ ...item, type: Number.parseInt(item.type) }))
       setCategories(mapped)
 
-      const createdId = created?.id || mapped[mapped.length - 1]?.id
-      if (createdId) {
-        const newType = newCategory.type === 1 ? "saida" : "entrada"
-        setFormData({ ...formData, category: createdId.toString(), type: newType })
+      const created = mapped.find((c) => c.name === newCategory.name)
+      if (created) {
+        const newType = created.type === 1 ? "saida" : "entrada"
+        setFormData({ ...formData, category: created.id.toString(), type: newType })
       }
 
       setShowCategoryDialog(false)
       setNewCategory({ name: "", color: "#3b82f6", type: 1, icon: "ShoppingCart" })
     } catch (error) {
-      console.error("Erro ao criar categoria:", error)
       setCategoryError("Erro ao criar categoria. Tente novamente.")
     }
   }
@@ -155,13 +155,11 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
       return
     }
     try {
-      setAccountError("") // limpa erro anterior
+      setAccountError("")
       const userId = getUserIdFromToken()
-      if (!userId) {
-        throw new Error("User ID not found")
-      }
+      if (!userId) throw new Error("User ID not found")
 
-      const created = await accountsAPI.create({
+      await accountsAPI.create({
         user: userId,
         name: newAccount.name,
         coin: newAccount.currency,
@@ -171,15 +169,16 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
       const updatedAccounts = await accountsAPI.getAll()
       setAccounts(updatedAccounts)
 
-      const createdId = created?.id || updatedAccounts[updatedAccounts.length - 1]?.id
-      if (createdId) {
-        setFormData({ ...formData, account: createdId.toString() })
+      const created = updatedAccounts.find((a) => a.name === newAccount.name)
+      if (created) {
+        setFormData({ ...formData, account: created.id.toString() })
+        localStorage.setItem(LAST_ACCOUNT_KEY, created.id.toString())
       }
+
       setShowAccountDialog(false)
       setNewAccount({ name: "", currency: "BRL", color: "#3b82f6" })
     } catch (error) {
-      console.error("Erro ao criar conta:", error)
-      alert("Erro ao criar conta: " + error.message)
+      setAccountError("Erro ao criar conta: " + error.message)
     }
   }
 
@@ -190,21 +189,9 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
           <DialogTitle>{transaction ? "Editar Transação" : "Nova Transação"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
-
-          {/* 6. Descrição */}
           <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-sm font-medium">
-                Descrição <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Ex: Compra no supermercado"
-              />
-            </div>
-            {/* 1. Valor (most important) */}
+
+            {/* 1. Valor */}
             <div className="space-y-2">
               <Label htmlFor="amount" className="text-sm font-medium">
                 Valor <span className="text-red-500">*</span>
@@ -217,79 +204,84 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
                   step="0.01"
                   min="0.01"
                   value={formData.amount}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      amount: e.target.value,
-                    })
-                  }
+                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                   placeholder="0,00"
                   className="pl-10"
                   required
                   autoFocus
                 />
               </div>
-              <p className="text-xs text-muted-foreground">Insira o valor da transação</p>
             </div>
 
-            {/* 2. Tipo (entrada/saída) - View Only */}
-            {formData.category && (
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">
-                  Tipo da Transação
-                </Label>
-                <div className={`px-4 py-3 rounded-lg border-2 font-medium text-sm flex items-center gap-2 ${formData.type === "saida"
-                  ? "border-red-200 bg-red-50 text-red-700 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900"
-                  : "border-green-200 bg-green-50 text-green-700 dark:bg-green-950/20 dark:text-green-400 dark:border-green-900"
-                  }`}>
-                  {formData.type === "saida" ? (
-                    <TrendingDown className="h-4 w-4" />
-                  ) : (
-                    <TrendingUp className="h-4 w-4" />
-                  )}
-                  <span>{formData.type === "saida" ? "Despesa" : "Receita"}</span>
-                </div>
-                <p className="text-xs text-muted-foreground">Definido automaticamente pela categoria selecionada</p>
+            {/* 2. Tipo toggle */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Tipo</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleTypeChange("saida")}
+                  className={`flex items-center justify-center gap-2 rounded-lg border-2 px-4 py-2.5 text-sm font-medium transition-colors ${
+                    formData.type === "saida"
+                      ? "border-red-500 bg-red-50 text-red-700 dark:bg-red-950/20 dark:text-red-400 dark:border-red-700"
+                      : "border-border text-muted-foreground hover:border-red-300 hover:text-red-600"
+                  }`}
+                >
+                  <TrendingDown className="h-4 w-4" />
+                  Despesa
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleTypeChange("entrada")}
+                  className={`flex items-center justify-center gap-2 rounded-lg border-2 px-4 py-2.5 text-sm font-medium transition-colors ${
+                    formData.type === "entrada"
+                      ? "border-green-500 bg-green-50 text-green-700 dark:bg-green-950/20 dark:text-green-400 dark:border-green-700"
+                      : "border-border text-muted-foreground hover:border-green-300 hover:text-green-600"
+                  }`}
+                >
+                  <TrendingUp className="h-4 w-4" />
+                  Receita
+                </button>
               </div>
-            )}
+            </div>
 
-            {/* 3. Categoria */}
+            {/* 3. Categoria (filtrada por tipo) */}
             <div className="space-y-2">
               <Label htmlFor="category" className="text-sm font-medium">
                 Categoria <span className="text-red-500">*</span>
               </Label>
               <div className="flex gap-2">
                 <Select
-                  key={`category-${formData.category}`}
+                  key={`category-${formData.type}-${formData.category}`}
                   value={formData.category}
-                  onValueChange={(value) => {
-                    const selectedCategory = categories.find((c) => c.id.toString() === value)
-                    const newType = selectedCategory?.type === 1 ? "saida" : "entrada"
-                    setFormData({ ...formData, category: value, type: newType })
-                  }}
+                  onValueChange={(value) => setFormData({ ...formData, category: value })}
                 >
                   <SelectTrigger id="category" className="flex-1">
                     <SelectValue placeholder="Selecione a categoria" />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.map((category) => {
-                      const IconComponent = getIconComponent(category.icon)
-                      return (
-                        <SelectItem key={category.id} value={category.id.toString()}>
-                          <div className="flex items-center gap-2">
-                            <IconComponent className="h-4 w-4" style={{ color: category.color }} />
-                            <span>{category.name}</span>
-                          </div>
-                        </SelectItem>
-                      )
-                    })}
+                    {filteredCategories.length === 0 ? (
+                      <div className="px-3 py-2 text-sm text-muted-foreground">
+                        Nenhuma categoria para este tipo
+                      </div>
+                    ) : (
+                      filteredCategories.map((category) => {
+                        const IconComponent = getIconComponent(category.icon)
+                        return (
+                          <SelectItem key={category.id} value={category.id.toString()}>
+                            <div className="flex items-center gap-2">
+                              <IconComponent className="h-4 w-4" style={{ color: category.color }} />
+                              <span>{category.name}</span>
+                            </div>
+                          </SelectItem>
+                        )
+                      })
+                    )}
                   </SelectContent>
                 </Select>
                 <Button type="button" size="icon" variant="outline" onClick={() => setShowCategoryDialog(true)}>
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">Se não existir, crie uma nova categoria</p>
               {showCategoryDialog && (
                 <div className="border rounded-lg p-3 space-y-3 bg-muted/50">
                   <Input
@@ -320,27 +312,45 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
                     />
                   </div>
                   <div className="flex gap-2">
-                    <Button type="button" size="sm" onClick={handleCreateCategory} className="flex-1">
-                      Criar
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setShowCategoryDialog(false)}
-                      className="flex-1"
-                    >
-                      Cancelar
-                    </Button>
+                    <Button type="button" size="sm" onClick={handleCreateCategory} className="flex-1">Criar</Button>
+                    <Button type="button" size="sm" variant="outline" onClick={() => setShowCategoryDialog(false)} className="flex-1">Cancelar</Button>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* 4. Conta Bancária */}
+            {/* 4. Descrição (opcional) */}
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-sm font-medium">
+                Descrição <span className="text-xs text-muted-foreground font-normal">(opcional)</span>
+              </Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="Ex: Compra no supermercado"
+              />
+            </div>
+
+            {/* 5. Data */}
+            <div className="space-y-2">
+              <Label htmlFor="date" className="text-sm font-medium">
+                Data <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="date"
+                type="date"
+                value={formData.date}
+                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                max={new Date().toISOString().split("T")[0]}
+                required
+              />
+            </div>
+
+            {/* 6. Conta */}
             <div className="space-y-2">
               <Label htmlFor="account" className="text-sm font-medium">
-                Conta Bancária <span className="text-red-500">*</span>
+                Conta <span className="text-red-500">*</span>
               </Label>
               <div className="flex gap-2">
                 <Select
@@ -382,43 +392,19 @@ export function TransactionDialog({ open, onOpenChange, transaction, onSave }) {
                     onChange={(e) => setNewAccount({ ...newAccount, color: e.target.value })}
                   />
                   <div className="flex gap-2">
-                    <Button type="button" size="sm" onClick={handleCreateAccount} className="flex-1">
-                      Criar
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setShowAccountDialog(false)}
-                      className="flex-1"
-                    >
-                      Cancelar
-                    </Button>
+                    <Button type="button" size="sm" onClick={handleCreateAccount} className="flex-1">Criar</Button>
+                    <Button type="button" size="sm" variant="outline" onClick={() => setShowAccountDialog(false)} className="flex-1">Cancelar</Button>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* 5. Data (prefilled with today) */}
-            <div className="space-y-2">
-              <Label htmlFor="date" className="text-sm font-medium">
-                Data <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="date"
-                type="date"
-                value={formData.date}
-                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                max={new Date().toISOString().split("T")[0]}
-                required
-              />
-            </div>
-
           </div>
+
+          {formError && <p className="text-sm text-red-500 pb-2">{formError}</p>}
+
           <DialogFooter className="gap-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancelar
-            </Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
             <Button type="submit">{transaction ? "Atualizar" : "Salvar"}</Button>
           </DialogFooter>
         </form>

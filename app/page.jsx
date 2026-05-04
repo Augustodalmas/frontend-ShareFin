@@ -3,10 +3,10 @@
 import { useState, useEffect } from "react"
 import { Sidebar } from "@/components/sidebar"
 import { Card } from "@/components/ui/card"
-import { FeedbackWidget } from "@/components/feedback-widget"
 import { Button } from "@/components/ui/button"
 import { TrendingUp, TrendingDown, Wallet, Receipt, Building2, Tag, Plus } from "lucide-react"
-import { transactionsAPI, accountsAPI, categoriesAPI, dashboardAPI } from "@/lib/api"
+import { transactionsAPI, accountsAPI, categoriesAPI, dashboardAPI, getUserIdFromToken } from "@/lib/api"
+import { useToast } from "@/hooks/use-toast"
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, LabelList } from "recharts"
 import { TransactionDialog } from "@/components/transaction-dialog"
 import { useRouter } from "next/navigation"
@@ -28,11 +28,8 @@ export default function DashboardPage() {
   const [dateFilter, setDateFilter] = useState("all")
   const [loading, setLoading] = useState(true)
   const router = useRouter()
+  const { toast } = useToast()
   const [dialogOpen, setDialogOpen] = useState(false)
-
-  useEffect(() => {
-    loadDashboardData()
-  }, [])
 
   const last6MonthsChartData = last6Months.map((item) => ({
     month: item.month,
@@ -124,35 +121,22 @@ export default function DashboardPage() {
   const handleSave = async (transactionData) => {
     try {
       const userId = getUserIdFromToken()
-      if (!userId) {
-        throw new Error("User ID not found in token. Please login again.")
-      }
+      if (!userId) throw new Error("Sessão expirada. Faça login novamente.")
 
       const createPayload = {
-        user: userId,
-        conta: Number.parseInt(transactionData.account),
-        categoria: Number.parseInt(transactionData.category),
-        valor: transactionData.type === "entrada" ? transactionData.amount : -transactionData.amount,
-        obs: transactionData.name,
-        data_transacao: transactionData.date,
+        account: Number.parseInt(transactionData.account),
+        category: Number.parseInt(transactionData.category),
+        value: transactionData.type === "entrada" ? transactionData.amount : -transactionData.amount,
+        name: transactionData.name,
+        date_transaction: transactionData.date,
       }
       await transactionsAPI.create(createPayload)
       setDialogOpen(false)
+      toast({ title: "Transação criada", description: "Adicionada com sucesso." })
       await loadDashboardData()
     } catch (error) {
       console.error("Erro ao salvar transação:", error)
-      alert(`Erro ao salvar transação: ${error.message}`)
-    }
-  }
-
-  const getUserIdFromToken = () => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
-    if (!token) return null
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]))
-      return payload.id
-    } catch {
-      return null
+      toast({ title: "Erro ao salvar", description: error.message || "Não foi possível salvar a transação.", variant: "destructive" })
     }
   }
 
@@ -177,7 +161,6 @@ export default function DashboardPage() {
   return (
     <div className="flex min-h-screen overflow-x-hidden">
       <Sidebar />
-      <FeedbackWidget />
       <main className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-8 pt-20 lg:pt-8 max-w-full overflow-x-hidden">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6 lg:mb-8">
           <div>

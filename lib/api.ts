@@ -55,7 +55,8 @@ async function fetchAPI(endpoint: string, options?: RequestInit) {
     }
 
     if (!response.ok) {
-      throw new Error(`API Error: ${response.status} ${response.statusText}`)
+      const errorBody = await response.json().catch(() => ({}))
+      throw new Error(errorBody.erro || errorBody.error || `Erro ${response.status}: ${response.statusText}`)
     }
 
     const data = await response.json()
@@ -122,6 +123,7 @@ export const usersAPI = {
   create: (data: any) => fetchAPI('/usuario', { method: 'POST', body: JSON.stringify(data) }),
   update: (id: number, data: any) => fetchAPI(`/usuario/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   delete: (id: number) => fetchAPI(`/usuario/${id}`, { method: 'DELETE' }),
+  confirmEmail: (token: string) => fetchAPI(`/usuario/confirm/${token}`),
 }
 
 // Dashboard

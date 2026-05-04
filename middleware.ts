@@ -5,8 +5,9 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get('auth-token')?.value
   const isLoginPage = request.nextUrl.pathname === '/login'
   const isRegisterPage = request.nextUrl.pathname === '/register'
+  const isConfirmPage = request.nextUrl.pathname === '/confirmar-email'
 
-  if (!token && !isLoginPage && !isRegisterPage) {
+  if (!token && !isLoginPage && !isRegisterPage && !isConfirmPage) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 

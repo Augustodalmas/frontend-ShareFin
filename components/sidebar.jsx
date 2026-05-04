@@ -2,10 +2,11 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { LayoutDashboard, Users, Building2, Tag, Receipt, Share2, LogOut, Menu, X, Target, Sparkles, Repeat } from 'lucide-react'
+import { LayoutDashboard, Users, Building2, Tag, Receipt, Share2, LogOut, Menu, X, Target, Sparkles, Repeat, MessageSquare } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { authAPI, isAdmin } from '@/lib/api'
 import { useState, useEffect } from 'react'
+import { FeedbackWidget } from '@/components/feedback-widget'
 
 const menuItems = [
   {
@@ -66,6 +67,7 @@ export function Sidebar() {
   const [isOpen, setIsOpen] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [userIsAdmin, setUserIsAdmin] = useState(false)
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
 
   useEffect(() => {
     setIsLoggedIn(!!localStorage.getItem('token'))
@@ -138,7 +140,14 @@ export function Sidebar() {
             )
           })}
         </nav>
-        <div className="border-t border-border p-4">
+        <div className="border-t border-border p-4 space-y-1">
+          <button
+            onClick={() => { setIsOpen(false); setFeedbackOpen(true) }}
+            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm lg:text-base font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+          >
+            <MessageSquare className="h-5 w-5" />
+            Feedback
+          </button>
           {isLoggedIn ? (
             <button
               onClick={handleLogout}
@@ -158,6 +167,8 @@ export function Sidebar() {
           )}
         </div>
       </aside>
+
+      <FeedbackWidget open={feedbackOpen} onOpenChange={setFeedbackOpen} />
     </>
   )
 }

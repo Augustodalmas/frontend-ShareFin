@@ -5,13 +5,13 @@ import { Sidebar } from "@/components/sidebar"
 import { PageHeader } from "@/components/page-header"
 import { DataTable } from "@/components/data-table"
 import { TransactionDialog } from "@/components/transaction-dialog"
-import { FeedbackWidget } from "@/components/feedback-widget"
 import { MobileFilters } from "@/components/mobile-filters"
 import { Button } from "@/components/ui/button"
 import { TransactionViewModal } from "@/components/transaction-view-modal"
 import { Plus, TrendingUp, TrendingDown } from "lucide-react"
 import { transactionsAPI, getUserIdFromToken, categoriesAPI, accountsAPI } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
+import { ConfirmDialog } from "@/components/confirm-dialog"
 
 interface Transaction {
   id: number
@@ -36,6 +36,8 @@ export default function TransactionsPage() {
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingTransaction, setEditingTransaction] = useState<Transaction | undefined>()
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null)
   const [filters, setFilters] = useState({
     account: '',
     category: '',
@@ -94,16 +96,53 @@ export default function TransactionsPage() {
 
     const formData = new FormData()
     formData.append('file', file)
-    const API_BASE_URL = process.env.IMPORT_CSV || 'https://api-gerenciadorfinanceiro.onrender.com/api/v1/transactions/import/csv'
+    const token = localStorage.getItem('token')
+    const csvUrl = `${process.env.NEXT_PUBLIC_API_URL || 'https://api-gerenciadorfinanceiro-production.up.railway.app/api/v1'}/transactions/import/csv`
 
-    const res = await fetch(API_BASE_URL, {
-      method: 'POST',
-      body: formData,
-    })
+    try {
+      const res = await fetch(csvUrl, {
+        method: 'POST',
+        headers: { ...(token && { 'Authorization': `Bearer ${token}` }) },
+        body: formData,
+      })
 
-    const data = await res.json()
+      const data = await res.json()
 
-    setCsvDrafts(data)
+      if (res.status === 429) {
+        toast({
+          title: "Limite atingido",
+          description: data.erro || "Limite de importações CSV excedido. Tente novamente em 1 hora.",
+          variant: "destructive",
+        })
+        return
+      }
+
+      if (res.status === 422) {
+        const detalhes: string[] = (data.detalhes || []).map((d: any) => d.erro)
+        toast({
+          title: "CSV inválido",
+          description: (data.erro || "Algumas linhas são inválidas.") + (detalhes.length ? " — " + detalhes.join("; ") : ""),
+          variant: "destructive",
+        })
+        return
+      }
+
+      if (!res.ok) {
+        toast({
+          title: "Erro ao importar",
+          description: data.erro || "Não foi possível importar o CSV.",
+          variant: "destructive",
+        })
+        return
+      }
+
+      const drafts = Array.isArray(data) ? data : (data.result || [])
+      setCsvDrafts(drafts)
+    } catch {
+      toast({ title: "Erro ao importar", description: "Verifique sua conexão e tente novamente.", variant: "destructive" })
+    } finally {
+      e.target.value = ''
+    }
   }
 
   const openCsvDraft = (draft: any, index: number) => {
@@ -112,7 +151,7 @@ export default function TransactionsPage() {
 
     setEditingTransaction({
       name: draft.title || "Sem descrição",
-      type: valor < 0 ? "entrada" : "saida",
+      type: valor < 0 ? "saida" : "entrada",
       category: "",
       account: "",
       amount: Math.abs(valor),
@@ -163,8 +202,8 @@ export default function TransactionsPage() {
       let transactionsList = Array.isArray(data) ? data : (data.result || [])
 
       const mapped = transactionsList.map((item: any) => {
-        const category = categories.find((c: any) => c.nome === item.category)
-        const account = accounts.find((a: any) => a.nome === item.account)
+        const category = categories.find((c: any) => c.name === item.category)
+        const account = accounts.find((a: any) => a.name === item.account)
 
         return {
           id: item.id,
@@ -220,7 +259,6 @@ export default function TransactionsPage() {
         })
       } else {
         const createPayload = {
-          user: userId,
           account: Number.parseInt(transactionData.account),
           category: Number.parseInt(transactionData.category),
           value: transactionData.type === "entrada" ? transactionData.amount : -transactionData.amount,
@@ -263,23 +301,23 @@ export default function TransactionsPage() {
     setDialogOpen(true)
   }
 
-  const handleDelete = async (transaction: Transaction) => {
-    if (confirm("Tem certeza que deseja excluir esta transação?")) {
-      try {
-        await transactionsAPI.delete(transaction.id)
-        toast({
-          title: "Transação excluída",
-          description: "A transação foi excluída com sucesso.",
-        })
-        await loadTransactions()
-      } catch (error) {
-        console.error("Erro ao excluir transação:", error)
-        toast({
-          title: "Erro ao excluir",
-          description: "Não foi possível excluir a transação. Tente novamente.",
-          variant: "destructive",
-        })
-      }
+  const handleDelete = (transaction: Transaction) => {
+    setTransactionToDelete(transaction)
+    setConfirmOpen(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!transactionToDelete) return
+    setConfirmOpen(false)
+    try {
+      await transactionsAPI.delete(transactionToDelete.id)
+      toast({ title: "Transação excluída", description: "A transação foi excluída com sucesso." })
+      await loadTransactions()
+    } catch (error) {
+      console.error("Erro ao excluir transação:", error)
+      toast({ title: "Erro ao excluir", description: "Não foi possível excluir a transação. Tente novamente.", variant: "destructive" })
+    } finally {
+      setTransactionToDelete(null)
     }
   }
 
@@ -378,7 +416,6 @@ export default function TransactionsPage() {
   return (
     <div className="flex min-h-screen overflow-x-hidden">
       <Sidebar />
-      <FeedbackWidget />
       <main className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-8 pt-20 lg:pt-8 max-w-full overflow-x-hidden">
         <PageHeader
           title="Transações"
@@ -633,10 +670,12 @@ export default function TransactionsPage() {
           data={transactions}
           columns={columns}
           onRowClick={(row) => handleView(row.id)}
-          // onEdit={handleEdit}
-          // onDelete={handleDelete}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
           onAdd={handleAdd}
           addButtonText="Nova Transação"
+          emptyMessage="Nenhuma transação encontrada"
+          emptyDescription="Adicione sua primeira transação ou ajuste os filtros aplicados"
         />
 
         <TransactionDialog
@@ -652,15 +691,21 @@ export default function TransactionsPage() {
           transaction={viewTransaction}
           onEdit={() => {
             setViewOpen(false)
-
-            setTimeout(() => {
-              handleEdit(viewTransaction!)
-            }, 0)
+            setTimeout(() => { handleEdit(viewTransaction!) }, 0)
           }}
           onDelete={() => {
             setViewOpen(false)
             handleDelete(viewTransaction!)
           }}
+        />
+
+        <ConfirmDialog
+          open={confirmOpen}
+          title="Excluir transação"
+          description={`Tem certeza que deseja excluir "${transactionToDelete?.name || 'esta transação'}"? Esta ação não pode ser desfeita.`}
+          confirmLabel="Excluir"
+          onConfirm={confirmDelete}
+          onCancel={() => { setConfirmOpen(false); setTransactionToDelete(null) }}
         />
 
       </main>

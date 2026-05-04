@@ -2,7 +2,6 @@
 
 import { Sidebar } from '@/components/sidebar'
 import { PageHeader } from '@/components/page-header'
-import { FeedbackWidget } from '@/components/feedback-widget'
 import { Card } from '@/components/ui/card'
 import { Sparkles } from 'lucide-react'
 
@@ -10,7 +9,6 @@ export default function AssistentePage() {
   return (
     <div className="flex min-h-screen overflow-x-hidden">
       <Sidebar />
-      <FeedbackWidget />
       <main className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-8 pt-20 lg:pt-8 max-w-full overflow-x-hidden">
         <PageHeader
           title="Assistente Financeiro IA"

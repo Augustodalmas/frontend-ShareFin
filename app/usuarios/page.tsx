@@ -6,10 +6,11 @@ import { Sidebar } from '@/components/sidebar'
 import { PageHeader } from '@/components/page-header'
 import { DataTable } from '@/components/data-table'
 import { UserDialog } from '@/components/user-dialog'
-import { FeedbackWidget } from '@/components/feedback-widget'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import { usersAPI, isAdmin } from '@/lib/api'
+import { useToast } from '@/hooks/use-toast'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 
 interface User {
   id: number
@@ -20,8 +21,11 @@ interface User {
 
 export default function UsersPage() {
   const router = useRouter()
+  const { toast } = useToast()
   const [users, setUsers] = useState<User[]>([])
   const [userIsAdmin, setUserIsAdmin] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [userToDelete, setUserToDelete] = useState<User | null>(null)
 
   useEffect(() => {
     const adminStatus = isAdmin()
@@ -75,14 +79,23 @@ export default function UsersPage() {
     setDialogOpen(true)
   }
 
-  const handleDelete = async (user: User) => {
-    if (confirm('Tem certeza que deseja excluir este usuário?')) {
-      try {
-        await usersAPI.delete(user.id)
-        await loadUsers()
-      } catch (error) {
-        console.error('Erro ao excluir usuário:', error)
-      }
+  const handleDelete = (user: User) => {
+    setUserToDelete(user)
+    setConfirmOpen(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!userToDelete) return
+    setConfirmOpen(false)
+    try {
+      await usersAPI.delete(userToDelete.id)
+      toast({ title: "Usuário excluído", description: "O usuário foi excluído com sucesso." })
+      await loadUsers()
+    } catch (error) {
+      console.error('Erro ao excluir usuário:', error)
+      toast({ title: "Erro ao excluir", description: "Não foi possível excluir o usuário.", variant: "destructive" })
+    } finally {
+      setUserToDelete(null)
     }
   }
 
@@ -107,7 +120,6 @@ export default function UsersPage() {
   return (
     <div className="flex min-h-screen overflow-x-hidden">
       <Sidebar />
-      <FeedbackWidget />
       <main className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-8 pt-20 lg:pt-8 max-w-full overflow-x-hidden">
         <PageHeader
           title="Usuários"
@@ -134,6 +146,15 @@ export default function UsersPage() {
           onOpenChange={setDialogOpen}
           user={editingUser}
           onSave={handleSave}
+        />
+
+        <ConfirmDialog
+          open={confirmOpen}
+          title="Excluir usuário"
+          description={`Tem certeza que deseja excluir "${userToDelete?.name}"? Esta ação não pode ser desfeita.`}
+          confirmLabel="Excluir"
+          onConfirm={confirmDelete}
+          onCancel={() => { setConfirmOpen(false); setUserToDelete(null) }}
         />
       </main>
     </div>

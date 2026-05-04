@@ -5,13 +5,13 @@ import { Sidebar } from '@/components/sidebar'
 import { PageHeader } from '@/components/page-header'
 import { DataTable } from '@/components/data-table'
 import { CategoryDialog } from '@/components/category-dialog'
-import { FeedbackWidget } from '@/components/feedback-widget'
 import { MobileFilters } from '@/components/mobile-filters'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import { categoriesAPI } from '@/lib/api'
 import { getIconComponent } from '@/components/icon-picker'
 import { useToast } from '@/hooks/use-toast'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 
 interface Category {
   id: number
@@ -48,6 +48,8 @@ export default function CategoriesPage() {
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | undefined>()
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null)
 
   const handleSave = async (categoryData: Omit<Category, 'id'> | Category) => {
     try {
@@ -88,23 +90,23 @@ export default function CategoriesPage() {
     setDialogOpen(true)
   }
 
-  const handleDelete = async (category: Category) => {
-    if (confirm('Tem certeza que deseja excluir esta categoria?')) {
-      try {
-        await categoriesAPI.delete(category.id)
-        toast({
-          title: "Categoria excluída",
-          description: "A categoria foi excluída com sucesso.",
-        })
-        await loadCategories()
-      } catch (error) {
-        console.error('Erro ao excluir categoria:', error)
-        toast({
-          title: "Erro ao excluir",
-          description: "Não foi possível excluir a categoria. Tente novamente.",
-          variant: "destructive",
-        })
-      }
+  const handleDelete = (category: Category) => {
+    setCategoryToDelete(category)
+    setConfirmOpen(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!categoryToDelete) return
+    setConfirmOpen(false)
+    try {
+      await categoriesAPI.delete(categoryToDelete.id)
+      toast({ title: "Categoria excluída", description: "A categoria foi excluída com sucesso." })
+      await loadCategories()
+    } catch (error) {
+      console.error('Erro ao excluir categoria:', error)
+      toast({ title: "Erro ao excluir", description: "Não foi possível excluir a categoria. Tente novamente.", variant: "destructive" })
+    } finally {
+      setCategoryToDelete(null)
     }
   }
 
@@ -139,7 +141,6 @@ export default function CategoriesPage() {
   return (
     <div className="flex min-h-screen overflow-x-hidden">
       <Sidebar />
-      <FeedbackWidget />
       <main className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-8 pt-20 lg:pt-8 max-w-full overflow-x-hidden">
         <PageHeader
           title="Categorias"
@@ -205,6 +206,8 @@ export default function CategoriesPage() {
           onDelete={handleDelete}
           onAdd={handleAdd}
           addButtonText="Nova Categoria"
+          emptyMessage="Nenhuma categoria cadastrada"
+          emptyDescription="Crie categorias para organizar suas transações por tipo"
         />
 
         <CategoryDialog
@@ -212,6 +215,15 @@ export default function CategoriesPage() {
           onOpenChange={setDialogOpen}
           category={editingCategory}
           onSave={handleSave}
+        />
+
+        <ConfirmDialog
+          open={confirmOpen}
+          title="Excluir categoria"
+          description={`Tem certeza que deseja excluir "${categoryToDelete?.name}"? Esta ação não pode ser desfeita.`}
+          confirmLabel="Excluir"
+          onConfirm={confirmDelete}
+          onCancel={() => { setConfirmOpen(false); setCategoryToDelete(null) }}
         />
       </main>
     </div>

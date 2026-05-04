@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { Sidebar } from '@/components/sidebar'
 import { PageHeader } from '@/components/page-header'
-import { FeedbackWidget } from '@/components/feedback-widget'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -142,7 +141,6 @@ export default function ProfilePage() {
   return (
     <div className="flex min-h-screen overflow-x-hidden">
       <Sidebar />
-      <FeedbackWidget />
       <main className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-8 pt-20 lg:pt-8 max-w-full overflow-x-hidden">
         <PageHeader title="Perfil" description="Gerencie suas informações pessoais" />
 
