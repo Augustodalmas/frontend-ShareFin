@@ -119,7 +119,7 @@ export default function CategoriesPage() {
     {
       header: 'Nome da Categoria',
       accessor: (row: Category) => {
-        const IconComponent = getIconComponent(row.icon)
+        const IconComponent = getIconComponent(row.icon ?? 'ShoppingCart')
         return (
           <div className="flex items-center gap-2">
             <IconComponent className="h-4 w-4 sm:h-5 sm:w-5" style={{ color: row.color }} />
