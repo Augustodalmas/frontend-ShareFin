@@ -158,7 +158,7 @@ export default function AccountsPage() {
     setFilters({ name: '', coin: '', ative: '', share: '' })
   }
 
-  const hasActiveFilters = filters.name || filters.coin || filters.ative || filters.share
+  const hasActiveFilters = !!(filters.name || filters.coin || filters.ative || filters.share)
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {

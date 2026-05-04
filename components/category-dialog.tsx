@@ -24,8 +24,30 @@ const colorOptions = [
   { name: 'Ciano', value: '#06b6d4' },
 ]
 
-export function CategoryDialog({ open, onOpenChange, category, onSave }) {
-  const [formData, setFormData] = useState({
+interface Category {
+  id: number | string
+  name: string
+  color: string
+  type: number
+  icone?: string
+}
+
+interface CategoryFormData {
+  name: string
+  color: string
+  type: number
+  icone: string
+}
+
+interface CategoryDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  category?: Category | null
+  onSave: (data: any) => void
+}
+
+export function CategoryDialog({ open, onOpenChange, category, onSave }: CategoryDialogProps) {
+  const [formData, setFormData] = useState<CategoryFormData>({
     name: '',
     color: colorOptions[0].value,
     type: 1,
@@ -52,7 +74,7 @@ export function CategoryDialog({ open, onOpenChange, category, onSave }) {
     }
   }, [open, category])
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (category) {
       onSave({ ...formData, id: category.id })

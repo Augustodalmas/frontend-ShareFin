@@ -1,6 +1,15 @@
 import { Card } from "@/components/ui/card"
+import { type LucideIcon } from "lucide-react"
 
-export function StatCard({ title, value, icon: Icon, description, trend }) {
+interface StatCardProps {
+  title: string
+  value: React.ReactNode
+  icon: LucideIcon
+  description?: string
+  trend?: number
+}
+
+export function StatCard({ title, value, icon: Icon, description, trend }: StatCardProps) {
   return (
     <Card className="p-4 sm:p-6 hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between gap-3">

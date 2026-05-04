@@ -2,8 +2,9 @@
 
 import { ShoppingCart, Home, Car, Coffee, Utensils, Briefcase, Heart, Zap, Gift, Plane, Smartphone, Shirt } from 'lucide-react'
 import { Label } from '@/components/ui/label'
+import { type LucideIcon } from 'lucide-react'
 
-const AVAILABLE_ICONS = [
+const AVAILABLE_ICONS: { name: string; Icon: LucideIcon }[] = [
   { name: 'ShoppingCart', Icon: ShoppingCart },
   { name: 'Home', Icon: Home },
   { name: 'Car', Icon: Car },
@@ -18,7 +19,12 @@ const AVAILABLE_ICONS = [
   { name: 'Shirt', Icon: Shirt },
 ]
 
-export function IconPicker({ value, onChange }) {
+interface IconPickerProps {
+  value: string
+  onChange: (name: string) => void
+}
+
+export function IconPicker({ value, onChange }: IconPickerProps) {
   return (
     <div className="space-y-2">
       <Label>Ícone</Label>
@@ -42,7 +48,7 @@ export function IconPicker({ value, onChange }) {
   )
 }
 
-export function getIconComponent(iconName) {
+export function getIconComponent(iconName: string): LucideIcon {
   const icon = AVAILABLE_ICONS.find(i => i.name === iconName)
   return icon?.Icon || ShoppingCart
 }
