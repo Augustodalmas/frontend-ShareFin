@@ -1,4 +1,4 @@
-export function PageHeader({ title, description, action }) {
+export function PageHeader({ title, description, action = null }) {
   return (
     <div className="mb-6 lg:mb-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
